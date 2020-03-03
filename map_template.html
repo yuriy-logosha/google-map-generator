@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #legend {
+        font-family: Arial, sans-serif;
+        background: #fff;
+        padding: 15px;
+        margin: 15px;
+        border: 3px solid #000;
+      }
+      #legend h3 {
+        margin-top: 0;
+      }
+      #legend img {
+        vertical-align: middle;
+      }
+      .gm-style .gm-style-iw {
+        font-size: 21px;
+      }
+    </style>
+    <META http-equiv="content-type" content="text/html; charset=utf-8">
+</head>
+<body>
+<div id="map"></div>
+<!--<div id="legend"><h3>Legend</h3></div>-->
+<script>
+        var locations = [REPLACE_THAT];
+        var iconBase = 'https://raw.githubusercontent.com/Concept211/Google-Maps-Markers/master/images/marker_[color][character].png'
+<!--        'http://maps.google.com/mapfiles/kml/paddle/';-->
+        var icons = {
+          flat: {
+            name: 'Flat',
+            icon: iconBase + 'red-blank.png'
+          },
+          house: {
+            name: 'House',
+            icon: iconBase + 'ylw-blank.png'
+          }
+        };
+
+        function getIcon(type){
+            return icons[type].icon
+        }
+
+<!--        var legend = document.getElementById('legend');-->
+<!--        for (var key in icons) {-->
+<!--          var type = icons[key];-->
+<!--          var name = type.name;-->
+<!--          var icon = type.icon;-->
+<!--          var div = document.createElement('div');-->
+<!--          div.innerHTML = '<img src="' + icon + '"> ' + name;-->
+<!--          legend.appendChild(div);-->
+<!--        }-->
+
+      var map;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 15,
+          center: new google.maps.LatLng(56.95309568029149,24.1818463802915),
+          mapTypeId: 'hybrid'
+        });
+
+        var markers = locations.map(function(location, i) {
+          var m = new google.maps.Marker({
+            position: location,
+            label: location.label+"",
+            title: location.title+"",
+            map: map
+          });
+          m.addListener("click", function() {updateContent(location.title, location.cnt); document.infowindow.open(map, m);});
+          return m;
+        });
+
+        // Add a marker clusterer to manage the markers.
+<!--        var markerCluster = new MarkerClusterer(map, markers,-->
+<!--            {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'});-->
+
+
+<!--        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);-->
+
+        // Create a <script> tag and set the USGS URL as the source.
+        var script = document.createElement('script');
+        // This example uses a local copy of the GeoJSON stored at
+        // http://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp
+        //script.src = 'https://developers.google.com/maps/documentation/javascript/examples/json/earthquake_GeoJSONP.js';
+        //document.getElementsByTagName('head')[0].appendChild(script);
+<!--        var obj = {"type":"FeatureCollection","metadata":{"generated":1583004203000,"url":"https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojsonp","title":"USGS Magnitude 2.5+ Earthquakes, Past Week","status":200,"api":"1.8.1","count":397},"features":[{"type":"Feature","properties":{"mag":3,"place":"85km S of Kobuk, Alaska","time":1583003603836,"updated":1583004074856,"tz":-540,"url":"https://earthquake.usgs.gov/earthquakes/eventpage/ak0202rjmw8v","detail":"https://earthquake.usgs.gov/earthquakes/feed/v1.0/detail/ak0202rjmw8v.geojsonp","felt":null,"cdi":null,"mmi":null,"alert":null,"status":"automatic","tsunami":0,"sig":138,"net":"ak","code":"0202rjmw8v","ids":",ak0202rjmw8v,","sources":",ak,","types":",geoserve,origin,","nst":null,"dmin":null,"rms":0.82,"gap":null,"magType":"ml","type":"earthquake","title":"M 3.0 - 85km S of Kobuk, Alaska"},"geometry":{"type":"Point","coordinates":[-157.2068,66.1536,3.7]},"id":"ak0202rjmw8v"}]};-->
+<!--        map.data.addGeoJson(obj);-->
+<!--        new google.maps.Marker({position: {-->
+<!--              "lat": 56.95881028029149,-->
+<!--              "lng": 24.1673712802915-->
+<!--            }, map: map});-->
+
+        document.infowindow = new google.maps.InfoWindow({content: ""});
+
+
+        function stringTemplateParser(expression, valueObj) {
+  const templateMatcher = /{{\s?([^{}\s]*)\s?}}/g;
+  let text = expression.replace(templateMatcher, (substring, value, index) => {
+    value = valueObj[value];
+    return value;
+  });
+  return text
+}
+
+        function updateContent(address, cnt) {
+            document.infowindow.close();
+            str ='{{type}}&nbsp;{{rooms}} &#1082;.&nbsp;{{m2}}m2&nbsp;{{level}}&nbsp;{{price_m2}}/m2&nbsp;<a target="_blank" href="https://{{url}}"><b>{{price}}</b></a>'
+            z = '<h3>'+address+'</h3>'
+            cnt.sort((a, b) => a.rooms - b.rooms).forEach(el => z += '<p>'+stringTemplateParser(str, el)+'</p>')
+
+            document.infowindow = new google.maps.InfoWindow({content: z});
+        }
+
+      }
+
+      // Loop through the results array and place a marker for each
+      // set of coordinates.
+<!--      window.eqfeed_callback = function(results) {-->
+<!--        for (var i = 0; i < results.features.length; i++) {-->
+<!--          var coords = results.features[i].geometry.coordinates;-->
+<!--          var latLng = new google.maps.LatLng(coords[1],coords[0]);-->
+<!--          var marker = new google.maps.Marker({-->
+<!--            position: latLng,-->
+<!--            map: map-->
+<!--          });-->
+<!--        }-->
+<!--      }-->
+
+
+
+</script>
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCasbDiMWMftbKcSnFrez-SF-YCechHSLA&callback=initMap">
+</script>
+</body>
+</html>
