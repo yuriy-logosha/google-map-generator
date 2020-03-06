@@ -50,12 +50,14 @@
 <!--}-->
 <!--</style>-->
 <script>
+    let $ = (id) => document.getElementById(id);
 <!--    var home = new google.maps.LatLng(56.95309568029149,24.1818463802915);-->
     var home = {lat: 56.95309568029149, lng: 24.1818463802915};
     var map;
     var markers;
     var rooms = new Set();
     var types = [];
+    var price = new Set();
     var locations = [REPLACE_THAT];
     var main_url = "https://www.google.com/maps/vt/icon/name="
 
@@ -108,6 +110,9 @@
       flat4: {
         icon: 'ico/602.png'
       },
+<!--      flat5: {-->
+<!--        icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,f0e82e,56890e?scale=1'-->
+<!--      },-->
       flat6: {
         icon: 'ico/LTP.png'
       },
@@ -120,6 +125,9 @@
       flat10: {
         icon: 'ico/SPEC.png'
       },
+<!--      flat11: {-->
+<!--        icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,f26f63,a50e0e?scale=1'-->
+<!--      },-->
       house: {
         name: 'House',
         icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,f0e82e,56890e?scale=1'
@@ -168,57 +176,46 @@
     }
 
 
-    function setMap(map) {
-        markers.forEach(el => el.setMap(map));
-    }
-
-    function showAll() {
-        setMap(map)
-    }
-
     function hasRoomsNumber(cnt, number) {
-        return cnt.filter(el => el.rooms === number+"").length > 0;
+        return cnt.filter(el => el.rooms === `${number}`).length > 0;
     }
 
     function hasSeries(cnt, number) {
         return cnt.filter(el => el.type === number+"").length > 0;
     }
 
-    function updateState(){
-            markers
-            .forEach(el => {
-                el.cnt.forEach(el => {
-                    el.enabled = document.getElementById('flats'+el.rooms).checked && document.getElementById('type'+types.find(t => t.type === el.type).id).checked
-                })
-                var n = el.cnt.filter(el=> !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).length;
-                el.setLabel((n > 1)?n+"":" ");
-                el.setMap(n===0?null:map)
-            }
-        );
+    let definePriceRange = (price) => {
+        if(price<=50000) {
+            return $('range1').checked;
+        } else if (price<=100000) {
+            return $('range2').checked;
+        } else if (price<=150000) {
+            return $('range3').checked;
+        } else if (price<=200000) {
+            return $('range4').checked;
+        } else if (price<=300000) {
+            return $('range5').checked;
+        } else if (price<=500000) {
+            return $('range6').checked;
+        } else if (price<=1000000) {
+            return $('range7').checked;
+        }
+        return true;
     }
 
-<!--    function switcher(room, opt){-->
-<!--            markers.filter(el => el.type === 'flat' && hasRoomsNumber(el.cnt, room))-->
-<!--            .forEach(el => {-->
-<!--                el.cnt.filter(el => el.rooms === room).forEach(el => el.enabled = opt)-->
-<!--                var n = el.cnt.filter(el=> !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).length;-->
-<!--                el.setLabel((n > 1)?n+"":" ");-->
-<!--                el.setMap(n===0?null:map)-->
-<!--            }-->
-<!--        );-->
-<!--    }-->
-
-
-<!--    function switcherSeries(series, opt){-->
-<!--            markers.filter(el => el.type === 'flat' && hasSeries(el.cnt, series))-->
-<!--            .forEach(el => {-->
-<!--                el.cnt.filter(el => el.type === series).forEach(el => el.seriesEnabled = opt)-->
-<!--                var n = el.cnt.filter(el=> !el.hasOwnProperty('seriesEnabled') || (el.hasOwnProperty('seriesEnabled') && el.seriesEnabled)).length;-->
-<!--                el.setLabel((n > 1)?n+"":" ");-->
-<!--                el.setMap(n===0?null:map)-->
-<!--            }-->
-<!--        );-->
-<!--    }-->
+    let updateState = () => {
+        document.infowindow.close();
+        markers.forEach(el => {
+            el.cnt.forEach(el => {
+                el.enabled = $(`flats${el.rooms}`).checked
+                    && $(`type${types.find(t => t.type === el.type).id}`).checked
+                    && definePriceRange(parseInt(el.price.replace('€', '').replace(',', '')));
+            })
+            var n = el.cnt.filter(el=> !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).length;
+            el.setLabel((n > 1)?n+"":" ");
+            el.setMap(n===0?null:map)
+        });
+    }
 
     function createCheckBox(parent, id, label, handler) {
         var div = document.createElement("div");
@@ -246,30 +243,17 @@
     function updateFlatsControlPanel(el) {
         document.infowindow.close();
         var flats = el.target;
-        //document.getElementById('flats');
         if (flats.checked) {
-            rooms.forEach((el, i) => {document.getElementById('flats'+el).checked = true});
+            rooms.forEach((el, i) => {$('flats'+el).checked = true});
         } else {
-            rooms.forEach((el, i) => {document.getElementById('flats'+el).checked = false});
+            rooms.forEach((el, i) => {$('flats'+el).checked = false});
             markers.filter(el => el.type === 'flat').forEach(el => el.setMap(null));
         }
         updateState();
     }
 
-    function updateRoomsControlPanel(panel) {
-        document.infowindow.close();
-<!--        rooms.forEach((el, i) => {switcher(el, document.getElementById('flats'+el).checked)});-->
-        updateState();
-    }
-
-    function updateSeriesControlPanel(){
-        document.infowindow.close();
-<!--        types.forEach((el, i) => {switcherSeries(el, document.getElementById('type'+el).checked)});-->
-        updateState();
-    }
-
     function updateHousesControlPanel(panel){
-        var houses = document.getElementById('houses');
+        var houses = $('houses');
         if (houses.checked) {
             markers.filter(el => el.type === 'house').forEach(el => el.setMap(map));
         } else {
@@ -278,7 +262,7 @@
     }
 
     function initMap() {
-        map = new google.maps.Map(document.getElementById('map'), {
+        map = new google.maps.Map($('map'), {
             zoom: 15,
             center: home,
             mapTypeId: 'hybrid'
@@ -294,8 +278,14 @@
 
         uniqueTypes = new Set();
         locations.forEach((location, i) => {
-            location.cnt.forEach(el=> {rooms.add(el.rooms); uniqueTypes.add(el.type);});
+            location.cnt.forEach(el=> {
+                rooms.add(el.rooms);
+                uniqueTypes.add(el.type);
+<!--                price.add(parseInt(el.price.replace("€", '').replace(',', '')));-->
+            });
         });
+
+<!--        price = Array.from(price).sort((a, b) => a - b)-->
 
         let i = 0
         for (let ut of Array.from(uniqueTypes).sort()) {
@@ -314,34 +304,60 @@
                 title: location.title+""
                 ,icon: getIcon(location)
             });
-            m.addListener("click", function() {updateContent(this.title, this.cnt); document.infowindow.open(map, m);});
+            m.addListener("click", function () {updateContent(this.title, this.cnt); document.infowindow.open(map, m);});
 
             return m;
         });
 
-        showAll(map);
+        markers.forEach(el => el.setMap(map));
 
         document.infowindow = new google.maps.InfoWindow({content: ""});
 
         var typesControlDiv = document.createElement('div');
         typesControlDiv.className = "floating-panel";
+
         var roomsControlDiv = document.createElement('div');
         roomsControlDiv.className = "floating-panel";
+
         var housesControlDiv = document.createElement('div');
         housesControlDiv.className = "floating-panel";
+
+        var pricesControlDiv = document.createElement('div');
+        pricesControlDiv.className = "floating-panel";
 
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(typesControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(roomsControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(housesControlDiv);
+        map.controls[google.maps.ControlPosition.LEFT_TOP].push(pricesControlDiv);
         createCheckBox(housesControlDiv, "houses", "Houses")
 
         types.forEach(el => createCheckBox(typesControlDiv, "type"+el.id, el.type));
 
         createCheckBox(roomsControlDiv, "flats", "Flats", updateFlatsControlPanel)
-        Array.from(rooms).sort().forEach(el=> createCheckBox(roomsControlDiv, "flats"+el, el, updateRoomsControlPanel));
+        Array.from(rooms).sort().forEach(el=> createCheckBox(roomsControlDiv, "flats"+el, el, updateState));
 
-        google.maps.event.addDomListener(typesControlDiv, 'click', function() {updateSeriesControlPanel(this)});
-        google.maps.event.addDomListener(housesControlDiv, 'click', function() {updateHousesControlPanel(this)});
+        google.maps.event.addDomListener(typesControlDiv, 'click', updateState);
+        google.maps.event.addDomListener(housesControlDiv, 'click', updateState);
+
+
+<!--        console.log(price);-->
+
+<!--        min = price[0];-->
+<!--        max = price[price.length-1];-->
+<!--        step = max / 4;-->
+<!--        createCheckBox(pricesControlDiv, "range1", min+"-"+step);-->
+<!--        createCheckBox(pricesControlDiv, "range2", step+"-"+step*2);-->
+<!--        createCheckBox(pricesControlDiv, "range3", step*2+"-"+step*3);-->
+<!--        createCheckBox(pricesControlDiv, "range4", step*3+"-"+step*4);-->
+
+        createCheckBox(pricesControlDiv, "range1", "<50k",  updateState);
+        createCheckBox(pricesControlDiv, "range2", "<100k", updateState);
+        createCheckBox(pricesControlDiv, "range3", "<150k", updateState);
+        createCheckBox(pricesControlDiv, "range4", "<200k", updateState);
+        createCheckBox(pricesControlDiv, "range5", "<300k", updateState);
+        createCheckBox(pricesControlDiv, "range6", "<500k", updateState);
+        createCheckBox(pricesControlDiv, "range7", "<1M",   updateState);
+
 
 }
 </script>
