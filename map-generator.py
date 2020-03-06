@@ -25,7 +25,7 @@ print("Selecting logging level", logging_level)
 print("Selecting logging format", config["logging.format"])
 print("Selecting logging file \"%s\"" % config['logging.file'])
 
-logging.basicConfig(format=config["logging.format"], handlers=[c_handler, f_handler])
+logging.basicConfig(format=config["logging.format"], level=logging_level, handlers=[c_handler, f_handler])
 logger = logging.getLogger(config["logging.name"])
 logger.setLevel(logging_level)
 
@@ -55,9 +55,13 @@ while True:
                         for i in ads:
                             i['date'] = str(i['date'])
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
-                        marker['label'] = str(len(ads))
+                        marker['label'] = str(len(ads)) if len(ads) > 1 else ' '
                         marker['title'] = a
                         marker['cnt'] = ads
+                        type = 'flat'
+                        if all(z['type'] in ['Ч. дом'] for z in ads):
+                            type = 'house'
+                        marker['type'] = type
                         replacement += json.dumps(marker) + ", "
                         logger.debug("Adding marker: %s, title: %s, label %s, header: %s", a, a, str(len(ads)), header)
                 else:
@@ -70,7 +74,7 @@ while True:
         to_file(config['map.path'], map)
 
     if 'restart' in config and config['restart'] > 0:
-        logger.info("Waiting %s minutes.", config['restart']/60)
+        logger.info("Waiting %s seconds.", config['restart'])
         time.sleep(config['restart'])
     else:
         exit()
