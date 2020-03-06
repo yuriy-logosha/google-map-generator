@@ -197,11 +197,52 @@
             return $('range5').checked;
         } else if (price<=500000) {
             return $('range6').checked;
-        } else if (price<=1000000) {
+        } else if (price>500000) {
             return $('range7').checked;
         }
         return true;
     }
+
+
+    let limitPerRange = (range) => {
+        if(range === 'range1') {
+            from = 0;
+            to = 50000;
+        } else if (range === 'range2') {
+            from = 50000;
+            to =100000;
+        } else if (range === 'range3') {
+            from = 100000;
+            to = 150000;
+        } else if (range === 'range4') {
+            from = 150000;
+            to = 200000;
+        } else if (range === 'range5') {
+            from = 200000;
+            to = 300000;
+        } else if (range === 'range6') {
+            from = 300000;
+            to = 500000;
+        } else if (range === 'range7') {
+            from = 500000;
+            to = 10000000;
+        }
+        return {
+            "from": from,
+            "to": to
+        }
+    }
+
+    let pricesPerRange = (range) => {
+        let r = limitPerRange(range);
+
+        let calculateItems = (total, el) => {
+            return total + el.cnt.filter(el=> {let n = parseInt(el.price.replace('€', '').replace(',', '')); return n >= r.from && n < r.to}).length;
+        }
+
+        return markers.reduce(calculateItems, 0);
+    }
+
 
     let updateState = () => {
         document.infowindow.close();
@@ -350,13 +391,13 @@
 <!--        createCheckBox(pricesControlDiv, "range3", step*2+"-"+step*3);-->
 <!--        createCheckBox(pricesControlDiv, "range4", step*3+"-"+step*4);-->
 
-        createCheckBox(pricesControlDiv, "range1", "<50k",  updateState);
-        createCheckBox(pricesControlDiv, "range2", "<100k", updateState);
-        createCheckBox(pricesControlDiv, "range3", "<150k", updateState);
-        createCheckBox(pricesControlDiv, "range4", "<200k", updateState);
-        createCheckBox(pricesControlDiv, "range5", "<300k", updateState);
-        createCheckBox(pricesControlDiv, "range6", "<500k", updateState);
-        createCheckBox(pricesControlDiv, "range7", "<1M",   updateState);
+        createCheckBox(pricesControlDiv, "range1", "<50k ("+pricesPerRange('range1')+")",  updateState);
+        createCheckBox(pricesControlDiv, "range2", "<100k ("+pricesPerRange('range2')+")", updateState);
+        createCheckBox(pricesControlDiv, "range3", "<150k ("+pricesPerRange('range3')+")", updateState);
+        createCheckBox(pricesControlDiv, "range4", "<200k ("+pricesPerRange('range4')+")", updateState);
+        createCheckBox(pricesControlDiv, "range5", "<300k ("+pricesPerRange('range5')+")", updateState);
+        createCheckBox(pricesControlDiv, "range6", "<500k ("+pricesPerRange('range6')+")", updateState);
+        createCheckBox(pricesControlDiv, "range7", ">500k ("+pricesPerRange('range7')+")",   updateState);
 
 
 }
