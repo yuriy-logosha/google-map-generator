@@ -1,22 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <META http-equiv="content-type" content="text/html; charset=utf-8">
     <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
       #map {
         height: 100%;
       }
-      /* Optional: Makes the sample page fill the window. */
       html, body {
         height: 100%;
         margin: 0;
         padding: 0;
       }
 
-<!--      .gm-style .gm-style-iw {-->
-<!--        font-size: 21px;-->
-<!--      }-->
     .floating-panel {
         position: absolute;
         top: 10px;
@@ -27,16 +22,16 @@
         border: 1px solid #999;
         text-align: left;
         font-family: 'Roboto','sans-serif';
-<!--        line-height: 30px;-->
         padding-left: 10px;
+        margin: 10px;
       }
 
       .flat-checkbox-label {
         padding: 5px;
       }
 
+
     </style>
-    <META http-equiv="content-type" content="text/html; charset=utf-8">
 </head>
 <body>
 <!--<div id="floating-panel">-->
@@ -50,6 +45,7 @@
 <!--}-->
 <!--</style>-->
 <script>
+    let $$ = (name) => document.createElement(name);
     let $ = (id) => document.getElementById(id);
 <!--    var home = new google.maps.LatLng(56.95309568029149,24.1818463802915);-->
     var home = {lat: 56.95309568029149, lng: 24.1818463802915};
@@ -166,91 +162,79 @@
 
     function updateContent(address, cnt) {
         document.infowindow.close();
-        str ='{{type}}&nbsp;{{rooms}} &#1082;.&nbsp;{{m2}}m2&nbsp;{{level}}&nbsp;{{price_m2}}/m2&nbsp;<a target="_blank" href="https://{{url}}"><b>{{price}}</b></a>'
-        z = '<div class="title full-width">'+address+'</div>';
-        cnt.sort((a, b) => a.rooms - b.rooms).filter(el=>!el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).forEach(el => z += '<div>'+stringTemplateParser(str, el)+'</div>');
+        str ='<td style="text-align:right">{{type}}</td><td style="text-align:right">{{rooms}} &#1082;.</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="https://{{url}}"><b>{{price}}</b></a></td>'
+        z = '<div class="title full-width">'+address+'</div><table>';
+        cnt.sort((a, b) => a.rooms - b.rooms).filter(el=>!el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).forEach(el => z += '<tr>'+stringTemplateParser(str, el)+'</tr>');
 
+        z += '</table>'
         z = '<div class="poi-info-window gm-style">'+z+'</div>'
 
         document.infowindow = new google.maps.InfoWindow({content: z});
     }
 
-
-    function hasRoomsNumber(cnt, number) {
-        return cnt.filter(el => el.rooms === `${number}`).length > 0;
-    }
-
-    function hasSeries(cnt, number) {
-        return cnt.filter(el => el.type === number+"").length > 0;
-    }
-
-    let definePriceRange = (price) => {
-        if(price<=50000) {
-            return $('range1').checked;
-        } else if (price<=100000) {
-            return $('range2').checked;
-        } else if (price<=150000) {
-            return $('range3').checked;
-        } else if (price<=200000) {
-            return $('range4').checked;
-        } else if (price<=300000) {
-            return $('range5').checked;
-        } else if (price<=500000) {
-            return $('range6').checked;
-        } else if (price>500000) {
-            return $('range7').checked;
+    let ranges = {
+        range1: {
+            from:   0,
+            to:     50000
+        },
+        range2: {
+            from:   50000,
+            to:     100000
+        },
+        range3: {
+            from:   100000,
+            to:     150000
+        },
+        range4: {
+            from:   150000,
+            to:     200000
+        },
+        range5: {
+            from:   200000,
+            to:     300000
+        },
+        range6: {
+            from:   300000,
+            to:     500000
+        },
+        range7: {
+            from:   500000,
+            to:     Number.MAX_SAFE_INTEGER
         }
-        return true;
+    };
+
+    let identifyRangeKey = (p) => {
+        let keys = Object.keys(ranges);
+        for(idx in keys) {
+            let rangeName = keys[idx];
+            if(ranges[rangeName].from < p && p <= ranges[rangeName].to) {
+                return rangeName;
+            }
+       }
+       return keys[keys.length-1];
     }
 
-
-    let limitPerRange = (range) => {
-        if(range === 'range1') {
-            from = 0;
-            to = 50000;
-        } else if (range === 'range2') {
-            from = 50000;
-            to =100000;
-        } else if (range === 'range3') {
-            from = 100000;
-            to = 150000;
-        } else if (range === 'range4') {
-            from = 150000;
-            to = 200000;
-        } else if (range === 'range5') {
-            from = 200000;
-            to = 300000;
-        } else if (range === 'range6') {
-            from = 300000;
-            to = 500000;
-        } else if (range === 'range7') {
-            from = 500000;
-            to = 10000000;
-        }
-        return {
-            "from": from,
-            "to": to
-        }
-    }
+    let extractPrice = (price) => {return parseInt(price.replace('€', '').replace(',', ''))}
 
     let pricesPerRange = (range) => {
-        let r = limitPerRange(range);
-
         let calculateItems = (total, el) => {
-            return total + el.cnt.filter(el=> {let n = parseInt(el.price.replace('€', '').replace(',', '')); return n >= r.from && n < r.to}).length;
+            return total + el.cnt.filter(el=> {let n = extractPrice(el.price); let r = ranges[range]; return n >= r.from && n < r.to}).length;
         }
 
         return markers.reduce(calculateItems, 0);
     }
 
 
+    let buildFlatId = (key) => `flats${key}`;
+    let buildTypeId = (key) => `type${key}`;
+
     let updateState = () => {
         document.infowindow.close();
         markers.forEach(el => {
             el.cnt.forEach(el => {
-                el.enabled = $(`flats${el.rooms}`).checked
+                el.enabled = $(buildFlatId(el.rooms)).checked
                     && $(`type${types.find(t => t.type === el.type).id}`).checked
-                    && definePriceRange(parseInt(el.price.replace('€', '').replace(',', '')));
+                    && $(identifyRangeKey(extractPrice(el.price))).checked;
             })
             var n = el.cnt.filter(el=> !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).length;
             el.setLabel((n > 1)?n+"":" ");
@@ -259,8 +243,8 @@
     }
 
     function createCheckBox(parent, id, label, handler) {
-        var div = document.createElement("div");
-        var checkbox = document.createElement("input");
+        var div = $$("div");
+        var checkbox = $$("input");
         checkbox.type = "checkbox";
         checkbox.id = id;
         checkbox.name = id;
@@ -271,7 +255,7 @@
             checkbox.onclick = handler
         }
 
-        var chckLbl = document.createElement("label");
+        var chckLbl = $$("label");
         chckLbl.htmlFor = checkbox.id;
         chckLbl.innerHTML = label;
         chckLbl.className = "flat-checkbox-label";
@@ -309,24 +293,13 @@
             mapTypeId: 'hybrid'
         });
 
-<!--var markerIcon = {-->
-<!--        url: 'http://image.flaticon.com/icons/svg/252/252025.svg',-->
-<!--        scaledSize: new google.maps.Size(80, 80),-->
-<!--        origin: new google.maps.Point(0, 0),-->
-<!--        anchor: new google.maps.Point(32,65),-->
-<!--        labelOrigin:  new google.maps.Point(40,33),-->
-<!--      };-->
-
         uniqueTypes = new Set();
         locations.forEach((location, i) => {
             location.cnt.forEach(el=> {
                 rooms.add(el.rooms);
                 uniqueTypes.add(el.type);
-<!--                price.add(parseInt(el.price.replace("€", '').replace(',', '')));-->
             });
         });
-
-<!--        price = Array.from(price).sort((a, b) => a - b)-->
 
         let i = 0
         for (let ut of Array.from(uniqueTypes).sort()) {
@@ -336,6 +309,7 @@
 
         markers = locations.map(function(location, i) {
             var m = new google.maps.Marker({
+                mapTypeControl: true,
                 position: location,
                 type: location.type,
                 cnt: location.cnt,
@@ -354,53 +328,41 @@
 
         document.infowindow = new google.maps.InfoWindow({content: ""});
 
-        var typesControlDiv = document.createElement('div');
+        let typesControlDiv = $$('div');
         typesControlDiv.className = "floating-panel";
 
-        var roomsControlDiv = document.createElement('div');
+        var roomsControlDiv = $$('div');
         roomsControlDiv.className = "floating-panel";
 
-        var housesControlDiv = document.createElement('div');
+        var housesControlDiv = $$('div');
         housesControlDiv.className = "floating-panel";
+        createCheckBox(housesControlDiv, "houses", "Houses", updateState)
 
-        var pricesControlDiv = document.createElement('div');
+        var pricesControlDiv = $$('div');
         pricesControlDiv.className = "floating-panel";
 
-        map.controls[google.maps.ControlPosition.TOP_LEFT].push(typesControlDiv);
-        map.controls[google.maps.ControlPosition.LEFT_TOP].push(roomsControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(housesControlDiv);
-        map.controls[google.maps.ControlPosition.LEFT_TOP].push(pricesControlDiv);
-        createCheckBox(housesControlDiv, "houses", "Houses")
+        map.controls[google.maps.ControlPosition.LEFT_TOP].push(roomsControlDiv);
+        map.controls[google.maps.ControlPosition.LEFT_CENTER].push(typesControlDiv);
+        map.controls[google.maps.ControlPosition.LEFT_CENTER].push(pricesControlDiv);
 
-        types.forEach(el => createCheckBox(typesControlDiv, "type"+el.id, el.type));
+        types.forEach(el => createCheckBox(typesControlDiv, buildTypeId(el.id), el.type));
+        google.maps.event.addDomListener(typesControlDiv, 'click', updateState);
 
         createCheckBox(roomsControlDiv, "flats", "Flats", updateFlatsControlPanel)
-        Array.from(rooms).sort().forEach(el=> createCheckBox(roomsControlDiv, "flats"+el, el, updateState));
+        Array.from(rooms).sort().forEach(el=> createCheckBox(roomsControlDiv, buildFlatId(el), el, updateState));
 
-        google.maps.event.addDomListener(typesControlDiv, 'click', updateState);
-        google.maps.event.addDomListener(housesControlDiv, 'click', updateState);
-
-
-<!--        console.log(price);-->
-
-<!--        min = price[0];-->
-<!--        max = price[price.length-1];-->
-<!--        step = max / 4;-->
-<!--        createCheckBox(pricesControlDiv, "range1", min+"-"+step);-->
-<!--        createCheckBox(pricesControlDiv, "range2", step+"-"+step*2);-->
-<!--        createCheckBox(pricesControlDiv, "range3", step*2+"-"+step*3);-->
-<!--        createCheckBox(pricesControlDiv, "range4", step*3+"-"+step*4);-->
-
-        createCheckBox(pricesControlDiv, "range1", "<50k ("+pricesPerRange('range1')+")",  updateState);
-        createCheckBox(pricesControlDiv, "range2", "<100k ("+pricesPerRange('range2')+")", updateState);
-        createCheckBox(pricesControlDiv, "range3", "<150k ("+pricesPerRange('range3')+")", updateState);
-        createCheckBox(pricesControlDiv, "range4", "<200k ("+pricesPerRange('range4')+")", updateState);
-        createCheckBox(pricesControlDiv, "range5", "<300k ("+pricesPerRange('range5')+")", updateState);
-        createCheckBox(pricesControlDiv, "range6", "<500k ("+pricesPerRange('range6')+")", updateState);
-        createCheckBox(pricesControlDiv, "range7", ">500k ("+pricesPerRange('range7')+")",   updateState);
+        createCheckBox(pricesControlDiv, "range1", `<div style="display:inline-block;width:35px"><50k</div><div style="display:inline;">(${pricesPerRange('range1')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range2", `<div style="display:inline-block;width:35px"><100k</div><div style="display:inline">(${pricesPerRange('range2')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range3", `<div style="display:inline-block;width:35px"><150k</div><div style="display:inline">(${pricesPerRange('range3')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range4", `<div style="display:inline-block;width:35px"><200k</div><div style="display:inline">(${pricesPerRange('range4')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range5", `<div style="display:inline-block;width:35px"><300k</div><div style="display:inline">(${pricesPerRange('range5')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range6", `<div style="display:inline-block;width:35px"><500k</div><div style="display:inline">(${pricesPerRange('range6')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range7", `<div style="display:inline-block;width:35px">>500k</div><div style="display:inline">(${pricesPerRange('range7')})</div>`, updateState);
 
 
 }
+
 </script>
 
 <script async defer
