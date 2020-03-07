@@ -31,7 +31,7 @@ logger.setLevel(logging_level)
 
 logger.info("Starting map generator.")
 while True:
-    myclient = pymongo.MongoClient(config['db.url.local'])
+    myclient = pymongo.MongoClient(config['db.url'])
     logger.debug("Connected to database.")
 
     with myclient:
