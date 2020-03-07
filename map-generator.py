@@ -31,7 +31,7 @@ logger.setLevel(logging_level)
 
 logger.info("Starting map generator.")
 while True:
-    myclient = pymongo.MongoClient(config['db.url'])
+    myclient = pymongo.MongoClient(config['db.url.local'])
     logger.debug("Connected to database.")
 
     with myclient:
@@ -54,6 +54,8 @@ while True:
                     if ads:
                         for i in ads:
                             i['date'] = str(i['date'])
+                            if 'rooms' not in i:
+                                i['rooms'] = '-'
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
                         marker['label'] = str(len(ads)) if len(ads) > 1 else ' '
                         marker['title'] = a

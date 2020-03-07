@@ -45,9 +45,13 @@
 <!--}-->
 <!--</style>-->
 <script>
-    let $$ = (name) => document.createElement(name);
+    let $$ = (tag) => {
+        let _o = document.createElement(tag);
+        _o.set = (property, value) => {_o[property] = value; return _o}
+        return _o;
+    };
     let $ = (id) => document.getElementById(id);
-<!--    var home = new google.maps.LatLng(56.95309568029149,24.1818463802915);-->
+
     var home = {lat: 56.95309568029149, lng: 24.1818463802915};
     var map;
     var markers;
@@ -160,14 +164,20 @@
         return text
     }
 
+    let isEnabled = (el) => {return !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)}
+
     function updateContent(address, cnt) {
         document.infowindow.close();
-        str ='<td style="text-align:right">{{type}}</td><td style="text-align:right">{{rooms}} &#1082;.</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="https://{{url}}"><b>{{price}}</b></a></td>'
-        z = '<div class="title full-width">'+address+'</div><table>';
-        cnt.sort((a, b) => a.rooms - b.rooms).filter(el=>!el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).forEach(el => z += '<tr>'+stringTemplateParser(str, el)+'</tr>');
+        let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">'
+        let str2 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="https://{{url}}"><b>{{price}}</b></a></td>'
+        let z = '<div class="poi-info-window gm-style"><div class="title full-width">'+address+'</div><table>';
+        cnt.sort((a, b) => a.rooms - b.rooms).filter(el => isEnabled(el))
+            .forEach(el => {
+                let template = str1 + (el.hasOwnProperty('rooms') && el['rooms']?'{{rooms}} &#1082;.':"") + str2;
+                z += '<tr>'+stringTemplateParser(template, el)+'</tr>'
+        });
 
-        z += '</table>'
-        z = '<div class="poi-info-window gm-style">'+z+'</div>'
+        z += '</table></div>'
 
         document.infowindow = new google.maps.InfoWindow({content: z});
     }
@@ -236,29 +246,16 @@
                     && $(`type${types.find(t => t.type === el.type).id}`).checked
                     && $(identifyRangeKey(extractPrice(el.price))).checked;
             })
-            var n = el.cnt.filter(el=> !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)).length;
+            var n = el.cnt.filter(el => isEnabled(el)).length;
             el.setLabel((n > 1)?n+"":" ");
             el.setMap(n===0?null:map)
         });
     }
 
     function createCheckBox(parent, id, label, handler) {
-        var div = $$("div");
-        var checkbox = $$("input");
-        checkbox.type = "checkbox";
-        checkbox.id = id;
-        checkbox.name = id;
-        checkbox.value = id;
-        checkbox.checked = true;
-        checkbox.className = "flat-checkbox";
-        if (handler) {
-            checkbox.onclick = handler
-        }
-
-        var chckLbl = $$("label");
-        chckLbl.htmlFor = checkbox.id;
-        chckLbl.innerHTML = label;
-        chckLbl.className = "flat-checkbox-label";
+        let div = $$("div");
+        let checkbox = $$("input").set('type', 'checkbox').set('id', id).set('name', id).set('value', id).set('checked', true).set('className', 'flat-checkbox').set('onclick', handler)
+        let chckLbl = $$("label").set('className', "flat-checkbox-label").set('htmlFor', checkbox.id).set('innerHTML', label);
 
         div.appendChild(checkbox);
         div.appendChild(chckLbl);
@@ -293,7 +290,7 @@
             mapTypeId: 'hybrid'
         });
 
-        uniqueTypes = new Set();
+        let uniqueTypes = new Set();
         locations.forEach((location, i) => {
             location.cnt.forEach(el=> {
                 rooms.add(el.rooms);
@@ -320,26 +317,23 @@
                 ,icon: getIcon(location)
             });
             m.addListener("click", function () {updateContent(this.title, this.cnt); document.infowindow.open(map, m);});
-
             return m;
         });
+
+<!--        if (localStorage.getItem('myItem')) {-->
+<!--            myValue = localStorage.getItem('myItem');-->
+<!--        }-->
 
         markers.forEach(el => el.setMap(map));
 
         document.infowindow = new google.maps.InfoWindow({content: ""});
 
-        let typesControlDiv = $$('div');
-        typesControlDiv.className = "floating-panel";
 
-        var roomsControlDiv = $$('div');
-        roomsControlDiv.className = "floating-panel";
-
-        var housesControlDiv = $$('div');
-        housesControlDiv.className = "floating-panel";
+        let typesControlDiv = $$('div').set('className', "floating-panel");
+        let roomsControlDiv = $$('div').set('className', "floating-panel");
+        let housesControlDiv = $$('div').set('className', "floating-panel");
+        let pricesControlDiv = $$('div').set('className', "floating-panel");
         createCheckBox(housesControlDiv, "houses", "Houses", updateState)
-
-        var pricesControlDiv = $$('div');
-        pricesControlDiv.className = "floating-panel";
 
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(housesControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(roomsControlDiv);
