@@ -10,7 +10,6 @@ except RuntimeError as e:
     print(e)
     exit()
 
-
 formatter = logging.Formatter(config['logging.format'])
 # Create handlers
 c_handler = logging.StreamHandler()
@@ -31,7 +30,7 @@ logger.setLevel(logging_level)
 
 logger.info("Starting map generator.")
 while True:
-    myclient = pymongo.MongoClient(config['db.url'])
+    myclient = pymongo.MongoClient(config['db.url.local'])
     logger.debug("Connected to database.")
 
     with myclient:
@@ -41,6 +40,7 @@ while True:
         map = txt_from_file(config['template.path'])
 
         replacement = ''
+            # txt_from_file('locations.txt')
 
         addresses = list(ss_ads.ads.distinct("address", {}))
         logger.debug("Receive list of addresses: %s", addresses)
@@ -69,7 +69,8 @@ while True:
                 else:
                     logger.debug("No geodata for:    %s", a)
 
-        map = map.replace(config['anchor'], replacement)
+        map = map.replace(config['anchor1'], replacement)
+        map = map.replace(config['anchor2'], config['version'])
 
         logger.info("Exporting to file: %s", config['map.path'])
 

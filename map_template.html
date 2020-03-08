@@ -63,6 +63,7 @@
     var rooms = new Set();
     var types = [];
     var price = new Set();
+    var version = "REPLACE_VERSION";
     var locations = [REPLACE_THAT];
     var main_url = "https://www.google.com/maps/vt/icon/name="
 
@@ -171,9 +172,10 @@
 
     function updateContent(address, cnt) {
         document.infowindow.close();
-        let str1 = '<td style="text-align:right">{{date}}</td><td style="text-align:right">{{type}}</td><td style="text-align:right">'
-        let str2 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="https://{{url}}"><b>{{price}}</b></a></td>'
-        let z = '<div class="poi-info-window gm-style"><div class="title full-width">'+address+'</div><table>';
+        let date = '<td style="text-align:right">{{date}}</td>';
+        let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">'
+        let str2 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="https://{{url}}"><b>{{price}}</b></a></td>'+date
+        let z = `<div class="poi-info-window gm-style"><div class="title full-width">${address}</div><table>`;
         cnt.sort((a, b) => a.rooms - b.rooms)
             .filter(el => isEnabled(el))
             .forEach(el => {
@@ -264,7 +266,7 @@
             })
             var n = m.cnt.filter(el => isEnabled(el)).length;
             m.setLabel(n > 1? n+"" : " ");
-            m.setMap(n===0 && !getCheck(m.type).checked? null : map)
+            m.setMap(n===0 || !getCheck(m.type).checked? null : map)
         });
     }
 
@@ -336,6 +338,7 @@
         document.infowindow = new google.maps.InfoWindow({content: ""});
 
 
+        let versionControlDiv = $$('div').set('textContent', version);
         let typesControlDiv = $$('div').set('className', "floating-panel");
         let roomsControlDiv = $$('div').set('className', "floating-panel");
         let housesControlDiv = $$('div').set('className', "floating-panel");
@@ -346,6 +349,7 @@
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(housesControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(typesControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(pricesControlDiv);
+        map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(versionControlDiv);
 
         types.forEach(el => createCheckBox(typesControlDiv, buildTypeId(el.id), el.type));
         google.maps.event.addDomListener(typesControlDiv, 'click', updateState);

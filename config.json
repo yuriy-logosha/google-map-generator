@@ -3,9 +3,12 @@
   "logging.format": "%(asctime)-15s %(levelname)s %(message)s",
   "logging.file": "mapupdater.log",
   "logging.level": 20,
-  "db.url": "mongodb://192.168.1.61:27017/",
-  "anchor": "REPLACE_THAT",
+  "db.url": "mongodb://darit.space:27017/",
+  "db.url.local": "mongodb://192.168.1.61:27017/",
+  "anchor1": "REPLACE_THAT",
+  "anchor2": "REPLACE_VERSION",
   "template.path": "map_template.html",
   "map.path": "index.html",
-  "restart": 0
+  "restart": 0,
+  "version": "0.9b"
 }
