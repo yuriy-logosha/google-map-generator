@@ -53,7 +53,7 @@ while True:
                     ads = list(ss_ads.ads.find({"address": a}, {'_id':0}))
                     if ads:
                         for i in ads:
-                            i['date'] = str(i['date'])
+                            i['date'] = i['date'].strftime("%H:%M %d %m %y")
                             if 'rooms' not in i:
                                 i['rooms'] = '-'
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')

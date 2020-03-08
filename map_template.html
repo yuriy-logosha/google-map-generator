@@ -24,7 +24,12 @@
         font-family: 'Roboto','sans-serif';
         padding-left: 10px;
         margin: 10px;
+        opacity: 60%;
       }
+
+    .floating-panel:hover {
+        opacity: 100%;
+    }
 
       .flat-checkbox-label {
         padding: 5px;
@@ -168,10 +173,11 @@
 
     function updateContent(address, cnt) {
         document.infowindow.close();
-        let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">'
+        let str1 = '<td style="text-align:right">{{date}}</td><td style="text-align:right">{{type}}</td><td style="text-align:right">'
         let str2 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="https://{{url}}"><b>{{price}}</b></a></td>'
         let z = '<div class="poi-info-window gm-style"><div class="title full-width">'+address+'</div><table>';
-        cnt.sort((a, b) => a.rooms - b.rooms).filter(el => isEnabled(el))
+        cnt.sort((a, b) => a.rooms - b.rooms)
+            .filter(el => isEnabled(el))
             .forEach(el => {
                 let template = str1 + (el.hasOwnProperty('rooms') && el['rooms']?'{{rooms}} &#1082;.':"") + str2;
                 z += '<tr>'+stringTemplateParser(template, el)+'</tr>'
@@ -335,10 +341,10 @@
         let pricesControlDiv = $$('div').set('className', "floating-panel");
         createCheckBox(housesControlDiv, "houses", "Houses", updateState)
 
-        map.controls[google.maps.ControlPosition.LEFT_TOP].push(housesControlDiv);
-        map.controls[google.maps.ControlPosition.LEFT_TOP].push(roomsControlDiv);
-        map.controls[google.maps.ControlPosition.LEFT_CENTER].push(typesControlDiv);
-        map.controls[google.maps.ControlPosition.LEFT_CENTER].push(pricesControlDiv);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(roomsControlDiv);
+        map.controls[google.maps.ControlPosition.TOP_LEFT].push(housesControlDiv);
+        map.controls[google.maps.ControlPosition.LEFT_TOP].push(typesControlDiv);
+        map.controls[google.maps.ControlPosition.LEFT_TOP].push(pricesControlDiv);
 
         types.forEach(el => createCheckBox(typesControlDiv, buildTypeId(el.id), el.type));
         google.maps.event.addDomListener(typesControlDiv, 'click', updateState);
@@ -354,9 +360,53 @@
         createCheckBox(pricesControlDiv, "range6", `<div style="display:inline-block;width:35px"><500k</div><div style="display:inline">(${pricesPerRange('range6')})</div>`, updateState);
         createCheckBox(pricesControlDiv, "range7", `<div style="display:inline-block;width:35px">>500k</div><div style="display:inline">(${pricesPerRange('range7')})</div>`, updateState);
 
+<!--        setTimeout(searchForPopUp, 6000);-->
 
+    }
+
+    function removePopUp(map) {
+        if (map && map.childNodes) {
+            for(c in map.childNodes) {
+                let child = map.childNodes[c];
+                if (child && child.innerText.includes("This page can't load Google Maps correctly")) {
+                    map.removeChild(child);
+                    return;
+                }
+            }
+<!--//For development purposes only-->
+        }
+    }
+
+    function searchForPopUp() {
+        let m = $('map');
+        removePopUp(m);
+        processElement(m, m);
+    }
+
+    function processElement(parent, el) {
+        if (el.style && el.style.cssText.includes('background-color: rgba(0, 0, 0, 0.5)')) {
+            parent.removeChild(el)
+            return;
+        }
+
+        if (el.childNodes) {
+<!--            var childs = Array.from(el.childNodes);-->
+            for(c in el.childNodes) {
+                processElement(el, el.childNodes[c]);
+            }
+        }
+    }
+
+function first() {
+    localStorage.setItem('myItem', "something you want to store");
 }
 
+function second() {
+    myValue = null;
+    if (localStorage.getItem('myItem')) {
+        myValue = localStorage.getItem('myItem');
+    }
+}
 </script>
 
 <script async defer
