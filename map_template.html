@@ -249,8 +249,8 @@
 
         markers.forEach(m => {
             m.cnt.forEach(el => {
-                el.enabled = m.type === 'house' || $(buildFlatId(el.rooms)).checked
-                    && $(`type${types.find(t => t.type === el.type).id}`).checked
+                el.enabled = (m.type === 'house' || $(buildFlatId(el.rooms)).checked
+                    && $(`type${types.find(t => t.type === el.type).id}`).checked)
                     && $(identifyRangeKey(extractPrice(el.price))).checked;
             })
             var n = m.cnt.filter(el => isEnabled(el)).length;
