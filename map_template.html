@@ -169,8 +169,6 @@
         return text
     }
 
-    let isEnabled = (el) => {return !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)}
-
     function updateContent(address, cnt) {
         document.infowindow.close();
         let str1 = '<td style="text-align:right">{{date}}</td><td style="text-align:right">{{type}}</td><td style="text-align:right">'
@@ -231,6 +229,10 @@
     }
 
     let extractPrice = (price) => {return parseInt(price.replace('€', '').replace(',', ''))}
+    let isEnabled = (el) => {return !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)}
+    let buildFlatId = (key) => `flats${key}`;
+    let buildTypeId = (key) => `type${key}`;
+    let buildHouseId = (key) => `house${key}`;
 
     let pricesPerRange = (range) => {
         let calculateItems = (total, el) => {
@@ -240,21 +242,29 @@
         return markers.reduce(calculateItems, 0);
     }
 
+    let houses = $('houses');
+    let flats = $('flats');
 
-    let buildFlatId = (key) => `flats${key}`;
-    let buildTypeId = (key) => `type${key}`;
+    let getHouses = () => {if (!houses) {houses = $('houses')} return houses}
+    let getFlats = () => {if (!flats) {flats = $('flats')} return flats}
+
+    let getCheck = (type) => {
+        if(type === 'house') return getHouses();
+        return getFlats()
+    }
 
     let updateState = () => {
         document.infowindow.close();
-        markers.forEach(el => {
-            el.cnt.forEach(el => {
-                el.enabled = $(buildFlatId(el.rooms)).checked
+
+        markers.forEach(m => {
+            m.cnt.forEach(el => {
+                el.enabled = m.type === 'house' || $(buildFlatId(el.rooms)).checked
                     && $(`type${types.find(t => t.type === el.type).id}`).checked
                     && $(identifyRangeKey(extractPrice(el.price))).checked;
             })
-            var n = el.cnt.filter(el => isEnabled(el)).length;
-            el.setLabel((n > 1)?n+"":" ");
-            el.setMap(n===0?null:map)
+            var n = m.cnt.filter(el => isEnabled(el)).length;
+            m.setLabel(n > 1? n+"" : " ");
+            m.setMap(n===0 && !getCheck(m.type).checked? null : map)
         });
     }
 
@@ -275,18 +285,9 @@
             rooms.forEach((el, i) => {$('flats'+el).checked = true});
         } else {
             rooms.forEach((el, i) => {$('flats'+el).checked = false});
-            markers.filter(el => el.type === 'flat').forEach(el => el.setMap(null));
+<!--            markers.filter(el => el.type === 'flat').forEach(el => el.setMap(null));-->
         }
         updateState();
-    }
-
-    function updateHousesControlPanel(panel){
-        var houses = $('houses');
-        if (houses.checked) {
-            markers.filter(el => el.type === 'house').forEach(el => el.setMap(map));
-        } else {
-            markers.filter(el => el.type === 'house').forEach(el => el.setMap(null));
-        }
     }
 
     function initMap() {
