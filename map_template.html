@@ -174,7 +174,7 @@
                 if (el.hasOwnProperty('prices')) {
                     el.prices.forEach(p => lines += p.price+" ("+p.date+") ")
                 }
-                let img = lines?'<span title="'+lines+'"><img style="height:10px;width:10px" src="ico/arrow_'+(el.arrow===0?'up':'down2')+'.png"/></span>':'';
+                let img = lines?'<span title="'+lines+'"><img style="height:10px;width:10px" src="ico/arrow_'+(el.arrow===0?'up':'down')+'.png"/></span>':'';
                 let str2 = str1_1+img+'</td>'+date;
                 let template = str1 + (el.hasOwnProperty('rooms') && el['rooms']?'{{rooms}} &#1082;.':"") + str2;
                 z += '<tr>'+stringTemplateParser(template, el)+'</tr>'
