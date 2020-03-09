@@ -50,12 +50,14 @@ while True:
                     logger.debug("Found geodata for: %s", a)
                     id = str(uuid.uuid4()).replace('-', '_')
                     marker = address_geodata['geodata'][0]['geometry']['location']
-                    ads = list(ss_ads.ads.find({"address": a}, {'_id':0}))
+                    ads = list(ss_ads.ads.find({'kind': 'ad', "address": a}))
                     if ads:
                         for i in ads:
                             i['date'] = i['date'].strftime("%H:%M %d.%m.%Y")
                             if 'rooms' not in i:
                                 i['rooms'] = '-'
+                            i['prices'] = list(ss_ads.ads.find({'$and': [{'kind': 'new_price'}, {'ad_id': i['_id']}]}).sort('date', pymongo.DESCENDING))
+                            del i['_id']
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
                         marker['label'] = str(len(ads)) if len(ads) > 1 else ' '
                         marker['title'] = a

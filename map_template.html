@@ -161,9 +161,17 @@
 
     function updateContent(address, cnt) {
         document.infowindow.close();
+        let lines = ''
+        if (cnt.hasOwnProperty('prices')) {
+            cnt.prices.forEach(el => {
+                lines += el[price]+" ("+el[date]+") "
+            })
+        }
+        let img = '<span title="'+lines+'"><img style="height:10px;width:10px" src="ico/arrow_down.png"/></span>';
+
         let date = '<td style="text-align:right">{{date}}</td>';
         let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">'
-        let str2 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="https://{{url}}"><b>{{price}}</b></a></td>'+date
+        let str2 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="{{url}}"><b>{{price}}</b></a>'+img+'</td>'+date
         let z = `<div class="poi-info-window gm-style"><div class="title full-width">${address}</div><table>`;
         cnt.sort((a, b) => a.rooms - b.rooms)
             .filter(el => isEnabled(el))
