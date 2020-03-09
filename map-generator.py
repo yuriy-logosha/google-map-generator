@@ -56,7 +56,13 @@ while True:
                             i['date'] = i['date'].strftime("%H:%M %d.%m.%Y")
                             if 'rooms' not in i:
                                 i['rooms'] = '-'
-                            i['prices'] = list(ss_ads.ads.find({'$and': [{'kind': 'new_price'}, {'ad_id': i['_id']}]}).sort('date', pymongo.DESCENDING))
+                            prices = list(ss_ads.ads.find({'$and': [{'kind': 'old_price'}, {'ad_id': i['_id']}]}).sort('date', pymongo.DESCENDING))
+                            for p in prices:
+                                del p['_id']
+                                del p['ad_id']
+                                p['date'] = p['date'].strftime("%H:%M %d.%m.%Y")
+                            i['prices'] = prices
+                            i['arrow'] = 0 if prices and len(prices)>0 and int(prices[0]['price'].replace('€', '').replace(',', '')) < int(i['price'].replace('€', '').replace(',', '')) else 1
                             del i['_id']
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
                         marker['label'] = str(len(ads)) if len(ads) > 1 else ' '

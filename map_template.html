@@ -161,26 +161,26 @@
 
     function updateContent(address, cnt) {
         document.infowindow.close();
-        let lines = ''
-        if (cnt.hasOwnProperty('prices')) {
-            cnt.prices.forEach(el => {
-                lines += el[price]+" ("+el[date]+") "
-            })
-        }
-        let img = '<span title="'+lines+'"><img style="height:10px;width:10px" src="ico/arrow_down.png"/></span>';
+
 
         let date = '<td style="text-align:right">{{date}}</td>';
-        let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">'
-        let str2 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="{{url}}"><b>{{price}}</b></a>'+img+'</td>'+date
+        let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">';
+        let str1_1 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right"><a target="_blank" href="{{url}}"><b>{{price}}</b></a>';
         let z = `<div class="poi-info-window gm-style"><div class="title full-width">${address}</div><table>`;
         cnt.sort((a, b) => a.rooms - b.rooms)
             .filter(el => isEnabled(el))
             .forEach(el => {
+                let lines = '';
+                if (el.hasOwnProperty('prices')) {
+                    el.prices.forEach(p => lines += p.price+" ("+p.date+") ")
+                }
+                let img = lines?'<span title="'+lines+'"><img style="height:10px;width:10px" src="ico/arrow_'+(el.arrow===0?'up':'down2')+'.png"/></span>':'';
+                let str2 = str1_1+img+'</td>'+date;
                 let template = str1 + (el.hasOwnProperty('rooms') && el['rooms']?'{{rooms}} &#1082;.':"") + str2;
                 z += '<tr>'+stringTemplateParser(template, el)+'</tr>'
         });
 
-        z += '</table></div>'
+        z += '</table></div>';
 
         document.infowindow = new google.maps.InfoWindow({content: z});
     }
