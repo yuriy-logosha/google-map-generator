@@ -227,7 +227,7 @@
        return keys[keys.length-1];
     }
 
-    let extractPrice = (price) => {return parseInt(price.replace('€', '').replace(',', ''))}
+    let extractPrice = (price) => {return parseInt(price.replace('€', '').replace(/,/g, ''))}
     let isEnabled = (el) => {return !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)}
     let buildFlatId = (key) => `flats${key}`;
     let buildTypeId = (key) => `type${key}`;
@@ -248,8 +248,7 @@
     let getFlats = () => {if (!flats) {flats = $('flats')} return flats}
 
     let getCheck = (type) => {
-        if(type === 'house') return getHouses();
-        return getFlats()
+        return (type === 'house')? getHouses():getFlats();
     }
 
     let updateState = () => {
@@ -257,8 +256,8 @@
 
         markers.forEach(m => {
             m.cnt.forEach(el => {
-                el.enabled = (m.type === 'house' || $(buildFlatId(el.rooms)).checked
-                    && $(`type${types.find(t => t.type === el.type).id}`).checked)
+                el.enabled = (m.type === 'flat'?$(buildFlatId(el.rooms)).checked:true || m.type === 'house'?$('houses').checked:true)
+                    && $(`type${types.find(t => t.type === el.type).id}`).checked
                     && $(identifyRangeKey(extractPrice(el.price))).checked;
             })
             var n = m.cnt.filter(el => isEnabled(el)).length;
@@ -293,6 +292,10 @@
         map = new google.maps.Map($('map'), {
             zoom: 15,
             center: home,
+<!--            mapTypeControlOptions: {-->
+<!--                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,-->
+<!--                mapTypeIds: ['hybrid', 'roadmap', 'terrain']-->
+<!--            },-->
             mapTypeId: 'hybrid'
         });
 
@@ -355,11 +358,11 @@
         Array.from(rooms).sort().forEach(el=> createCheckBox(roomsControlDiv, buildFlatId(el), el, updateState));
 
         createCheckBox(pricesControlDiv, "range1", `<div style="display:inline-block;width:35px"><50k</div><div style="display:inline;">(${pricesPerRange('range1')})</div>`, updateState);
-        createCheckBox(pricesControlDiv, "range2", `<div style="display:inline-block;width:35px"><100k</div><div style="display:inline">(${pricesPerRange('range2')})</div>`, updateState);
-        createCheckBox(pricesControlDiv, "range3", `<div style="display:inline-block;width:35px"><150k</div><div style="display:inline">(${pricesPerRange('range3')})</div>`, updateState);
-        createCheckBox(pricesControlDiv, "range4", `<div style="display:inline-block;width:35px"><200k</div><div style="display:inline">(${pricesPerRange('range4')})</div>`, updateState);
-        createCheckBox(pricesControlDiv, "range5", `<div style="display:inline-block;width:35px"><300k</div><div style="display:inline">(${pricesPerRange('range5')})</div>`, updateState);
-        createCheckBox(pricesControlDiv, "range6", `<div style="display:inline-block;width:35px"><500k</div><div style="display:inline">(${pricesPerRange('range6')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range2", `<div style="display:inline-block;width:35px">>50k</div><div style="display:inline">(${pricesPerRange('range2')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range3", `<div style="display:inline-block;width:35px">>100k</div><div style="display:inline">(${pricesPerRange('range3')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range4", `<div style="display:inline-block;width:35px">>150k</div><div style="display:inline">(${pricesPerRange('range4')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range5", `<div style="display:inline-block;width:35px">>200k</div><div style="display:inline">(${pricesPerRange('range5')})</div>`, updateState);
+        createCheckBox(pricesControlDiv, "range6", `<div style="display:inline-block;width:35px">>300k</div><div style="display:inline">(${pricesPerRange('range6')})</div>`, updateState);
         createCheckBox(pricesControlDiv, "range7", `<div style="display:inline-block;width:35px">>500k</div><div style="display:inline">(${pricesPerRange('range7')})</div>`, updateState);
 
 <!--        setTimeout(searchForPopUp, 6000);-->
