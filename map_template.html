@@ -215,16 +215,16 @@
             to:     Number.MAX_SAFE_INTEGER
         }
     };
+    let rangesKeys = Object.keys(ranges);
 
     let identifyRangeKey = (p) => {
-        let keys = Object.keys(ranges);
-        for(idx in keys) {
-            let rangeName = keys[idx];
+        for(idx in rangesKeys) {
+            let rangeName = rangesKeys[idx];
             if(ranges[rangeName].from < p && p <= ranges[rangeName].to) {
                 return rangeName;
             }
        }
-       return keys[keys.length-1];
+       return rangesKeys[rangesKeys.length-1];
     }
 
     let extractPrice = (price) => {return parseInt(price.replace('€', '').replace(/,/g, ''))}
@@ -236,6 +236,33 @@
     let pricesPerRange = (range) => {
         let calculateItems = (total, el) => {
             return total + el.cnt.filter(el=> {let n = extractPrice(el.price); let r = ranges[range]; return n >= r.from && n < r.to}).length;
+        }
+
+        return markers.reduce(calculateItems, 0);
+    }
+
+    let rangesM2 = {
+        m2range1: {display: '< 50', from: 0, to: 50},
+        m2range2: {display: '51-60', from: 51, to: 60},
+        m2range3: {display: '61-90', from: 61, to: 90},
+        m2range4: {display: '91-120', from: 91, to: 120},
+        m2range5: {display: '  > 121', from: 121, to: 999999},
+    }
+    let rangesM2Keys = Object.keys(rangesM2);
+
+    let identifyRangeM2Key = (m2) => {
+        for(idx in rangesM2Keys) {
+            let rangeName = rangesM2Keys[idx];
+            if(rangesM2[rangeName].from < m2 && m2 <= rangesM2[rangeName].to) {
+                return rangeName;
+            }
+       }
+       return rangesM2Keys[rangesM2Keys.length-1];
+    }
+
+    let flatsPerM2 = (range) => {
+        let calculateItems = (total, el) => {
+            return total + el.cnt.filter(el=> {let n = parseInt(el.m2); let r = rangesM2[range]; return n > r.from && n <= r.to}).length;
         }
 
         return markers.reduce(calculateItems, 0);
@@ -258,7 +285,8 @@
             m.cnt.forEach(el => {
                 el.enabled = (m.type === 'flat'?$(buildFlatId(el.rooms)).checked:true || m.type === 'house'?$('houses').checked:true)
                     && $(`type${types.find(t => t.type === el.type).id}`).checked
-                    && $(identifyRangeKey(extractPrice(el.price))).checked;
+                    && $(identifyRangeKey(extractPrice(el.price))).checked
+                    && $(identifyRangeM2Key(parseInt(el.m2))).checked;
             })
             var n = m.cnt.filter(el => isEnabled(el)).length;
             m.setLabel(n > 1? n+"" : " ");
@@ -313,6 +341,7 @@
             i ++;
         }
 
+
         markers = locations.map(function(location, i) {
             var m = new google.maps.Marker({
                 mapTypeControl: true,
@@ -343,12 +372,14 @@
         let roomsControlDiv = $$('div').set('className', "floating-panel");
         let housesControlDiv = $$('div').set('className', "floating-panel");
         let pricesControlDiv = $$('div').set('className', "floating-panel");
+        let m2ControlDiv = $$('div').set('className', "floating-panel");
         createCheckBox(housesControlDiv, "houses", "Houses", updateState)
 
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(roomsControlDiv);
         map.controls[google.maps.ControlPosition.TOP_LEFT].push(housesControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(typesControlDiv);
         map.controls[google.maps.ControlPosition.LEFT_TOP].push(pricesControlDiv);
+        map.controls[google.maps.ControlPosition.LEFT_TOP].push(m2ControlDiv);
         map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(versionControlDiv);
 
         types.forEach(el => createCheckBox(typesControlDiv, buildTypeId(el.id), el.type));
@@ -364,6 +395,14 @@
         createCheckBox(pricesControlDiv, "range5", `<div style="display:inline-block;width:35px">>200k</div><div style="display:inline">(${pricesPerRange('range5')})</div>`, updateState);
         createCheckBox(pricesControlDiv, "range6", `<div style="display:inline-block;width:35px">>300k</div><div style="display:inline">(${pricesPerRange('range6')})</div>`, updateState);
         createCheckBox(pricesControlDiv, "range7", `<div style="display:inline-block;width:35px">>500k</div><div style="display:inline">(${pricesPerRange('range7')})</div>`, updateState);
+
+        createCheckBox(m2ControlDiv, "m2range1", `<div style="display:inline-block;width:35px">${rangesM2['m2range1'].display}</div><div style="display:inline">(${flatsPerM2('m2range1')})</div>`, updateState);
+        createCheckBox(m2ControlDiv, "m2range2", `<div style="display:inline-block;width:35px">${rangesM2['m2range2'].display}</div><div style="display:inline">(${flatsPerM2('m2range2')})</div>`, updateState);
+        createCheckBox(m2ControlDiv, "m2range3", `<div style="display:inline-block;width:35px">${rangesM2['m2range3'].display}</div><div style="display:inline">(${flatsPerM2('m2range3')})</div>`, updateState);
+        createCheckBox(m2ControlDiv, "m2range4", `<div style="display:inline-block;width:35px">${rangesM2['m2range4'].display}</div><div style="display:inline">(${flatsPerM2('m2range4')})</div>`, updateState);
+        createCheckBox(m2ControlDiv, "m2range5", `<div style="display:inline-block;width:35px">${rangesM2['m2range5'].display}</div><div style="display:inline">(${flatsPerM2('m2range5')})</div>`, updateState);
+
+
 
 <!--        setTimeout(searchForPopUp, 6000);-->
 
