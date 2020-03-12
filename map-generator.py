@@ -74,6 +74,8 @@ while True:
                                 if last_old_price < current_price:
                                     i['arrow'] = 0
                             del i['_id']
+                            if 'outdated' in i:
+                                i['url'] = ''
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
                         marker['label'] = str(len(ads)) if len(ads) > 1 else ''
                         marker['title'] = a
