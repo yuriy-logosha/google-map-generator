@@ -45,6 +45,7 @@
         return _o;
     };
     let $ = (id) => document.getElementById(id);
+    let $doc = (id) => document[id];
 
     var home = {lat: 56.95309568029149, lng: 24.1818463802915};
     var map;
@@ -227,7 +228,6 @@
        return rangesKeys[rangesKeys.length-1];
     }
 
-    let extractPrice = (price) => {return parseInt(price.replace('€', '').replace(/,/g, ''))}
     let isEnabled = (el) => {return !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)}
     let buildFlatId = (key) => `flats${key}`;
     let buildTypeId = (key) => `type${key}`;
@@ -235,7 +235,7 @@
 
     let pricesPerRange = (range) => {
         let calculateItems = (total, el) => {
-            return total + el.cnt.filter(el=> {let n = extractPrice(el.price); let r = ranges[range]; return n >= r.from && n < r.to}).length;
+            return total + el.cnt.filter(el=> {let n = el.current_price; let r = ranges[range]; return n >= r.from && n < r.to}).length;
         }
 
         return markers.reduce(calculateItems, 0);
@@ -281,12 +281,14 @@
     let updateState = () => {
         document.infowindow.close();
 
+        let documentHousesCheck = document['houses'];
+
         markers.forEach(m => {
             m.cnt.forEach(el => {
-                el.enabled = (m.type === 'flat'?$(buildFlatId(el.rooms)).checked:true || m.type === 'house'?$('houses').checked:true)
-                    && $(`type${types.find(t => t.type === el.type).id}`).checked
-                    && $(identifyRangeKey(extractPrice(el.price))).checked
-                    && $(identifyRangeM2Key(parseInt(el.m2))).checked;
+                el.enabled = (m.type === 'flat'?document[buildFlatId(el.rooms)].checked:true || m.type === 'house'?documentHousesCheck.checked:true)
+                    && $doc(`type${types.find(t => t.type === el.type).id}`).checked
+                    && $doc(el.range_price).checked
+                    && $doc(el.range_m2).checked;
             })
             var n = m.cnt.filter(el => isEnabled(el)).length;
             m.setLabel(n > 1? n+"" : " ");
@@ -294,10 +296,15 @@
         });
     }
 
+<!--                    && $doc(identifyRangeKey(el.current_price)).checked-->
+
+
     function createCheckBox(parent, id, label, handler) {
         let div = $$("div");
         let checkbox = $$("input").set('type', 'checkbox').set('id', id).set('name', id).set('value', id).set('checked', true).set('className', 'flat-checkbox').set('onclick', handler)
         let chckLbl = $$("label").set('className', "flat-checkbox-label").set('htmlFor', checkbox.id).set('innerHTML', label);
+
+        document[id] = checkbox;
 
         div.appendChild(checkbox);
         div.appendChild(chckLbl);
@@ -332,6 +339,9 @@
             location.cnt.forEach(el=> {
                 rooms.add(el.rooms);
                 uniqueTypes.add(el.type);
+                el['range_price'] = identifyRangeKey(el.current_price)
+                el['range_m2'] = identifyRangeM2Key(parseInt(el.m2))
+
             });
         });
 
@@ -343,14 +353,16 @@
 
 
         markers = locations.map(function(location, i) {
+            let lbl = null;
+            if (location.label) {
+                lbl = { text: location.label}
+            }
             var m = new google.maps.Marker({
                 mapTypeControl: true,
                 position: location,
                 type: location.type,
                 cnt: location.cnt,
-                label: {
-                    text: location.label+""
-                  },
+                label: lbl,
                 title: location.title+""
                 ,icon: getIcon(location)
             });

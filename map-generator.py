@@ -28,6 +28,10 @@ logging.basicConfig(format=config["logging.format"], level=logging_level, handle
 logger = logging.getLogger(config["logging.name"])
 logger.setLevel(logging_level)
 
+
+def extract_price(s_price: str) -> int:
+    return int(s_price.replace('€', '').replace(',', ''))
+
 logger.info("Starting map generator.")
 while True:
     myclient = pymongo.MongoClient(config['db.url.local'])
@@ -42,15 +46,15 @@ while True:
         replacement = ''
             # txt_from_file('locations.txt')
 
-        addresses = list(ss_ads.ads.distinct("address", {}))
+        addresses = list(ss_ads.ads.distinct("address_lv", {}))
         logger.debug("Receive list of addresses: %s", addresses)
         for a in addresses:
-            for address_geodata in list(ss_ads.geodata.find({'address': a})):
+            for address_geodata in list(ss_ads.geodata.find({'address_lv': a})):
                 if 'geodata' in address_geodata and address_geodata['geodata']:
                     logger.debug("Found geodata for: %s", a)
                     id = str(uuid.uuid4()).replace('-', '_')
                     marker = address_geodata['geodata'][0]['geometry']['location']
-                    ads = list(ss_ads.ads.find({'kind': 'ad', "address": a}))
+                    ads = list(ss_ads.ads.find({'kind': 'ad', "address_lv": a}))
                     if ads:
                         for i in ads:
                             i['date'] = i['date'].strftime("%H:%M %d.%m.%Y")
@@ -62,10 +66,16 @@ while True:
                                 del p['ad_id']
                                 p['date'] = p['date'].strftime("%H:%M %d.%m.%Y")
                             i['prices'] = prices
-                            i['arrow'] = 0 if prices and len(prices)>0 and int(prices[0]['price'].replace('€', '').replace(',', '')) < int(i['price'].replace('€', '').replace(',', '')) else 1
+                            i['arrow'] = 1
+                            current_price = extract_price(i['price'])
+                            i['current_price'] = current_price
+                            if prices and len(prices)>0:
+                                last_old_price = extract_price(prices[0]['price'])
+                                if last_old_price < current_price:
+                                    i['arrow'] = 0
                             del i['_id']
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
-                        marker['label'] = str(len(ads)) if len(ads) > 1 else ' '
+                        marker['label'] = str(len(ads)) if len(ads) > 1 else ''
                         marker['title'] = a
                         marker['cnt'] = ads
                         type = 'flat'
@@ -78,7 +88,7 @@ while True:
                     logger.debug("No geodata for:    %s", a)
 
         map = map.replace(config['anchor1'], replacement)
-        map = map.replace(config['anchor2'], config['version'])
+        map = map.replace(config['anchor2'], config['version']+'.'+ str(time.time()))
 
         logger.info("Exporting to file: %s", config['map.path'])
 
