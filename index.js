@@ -77,9 +77,9 @@
     function getIcon(location){
         if (location.type === 'flat') {
             var s = new Set();
-            location.cnt.forEach(el => s.add(el.type))
+            location.cnt.forEach(el => s.add(el.type));
             if (s.size === 1) {
-                ic = icons['flat'+types.find(t => t.type === s.values().next().value).id]
+                let ic = icons['flat'+types.find(t => t.type === s.values().next().value).id]
                 if (ic) {
                     return ic.icon
                 }
@@ -239,10 +239,9 @@
     }
 
     function toggle(checked) {
-      var elm = this;
-      if (checked != elm.checked) {
-        elm.click();
-      }
+        if (checked != this.checked) {
+            this.click();
+        }
     }
 
     function createCheckBox(parent, id, label, handler, value) {
