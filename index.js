@@ -286,7 +286,7 @@
         if (map && map.childNodes) {
             for(c in map.childNodes) {
                 let child = map.childNodes[c];
-                if (child && child.innerText.includes("This page can't load Google Maps correctly")) {
+                if (child && child.innerText && child.innerText.includes("This page can't load Google Maps correctly")) {
                     map.removeChild(child);
                     return;
                 }
@@ -294,34 +294,16 @@
         }
     }
 
-    function searchForPopUp() {
-        let m = $('map');
-        removePopUp(m);
-        processElement(m, m);
-    }
-
     function processElement(parent, el) {
-        if (el.style && el.style.cssText.includes('background-color: rgba(0, 0, 0, 0.5)')) {
+        if (parent && el && el.style && el.style.cssText.includes('background-color: rgba(0, 0, 0, 0.5)')) {
             parent.removeChild(el)
             return;
         }
 
-        if (el.childNodes) {
-//            var childs = Array.from(el.childNodes);
+        if (el && el.childNodes) {
             for(c in el.childNodes) {
                 processElement(el, el.childNodes[c]);
             }
-        }
-    }
-
-    function first() {
-        localStorage.setItem('myItem', "something you want to store");
-    }
-
-    function second() {
-        myValue = null;
-        if (localStorage.getItem('myItem')) {
-            myValue = localStorage.getItem('myItem');
         }
     }
 
@@ -366,31 +348,16 @@
 
         createCheckBox($('housesControl'), "houses", "Houses", updateState);
         createCheckBox($('roomsControl'), "flats", "Flats", updateFlatsControlPanel);
-        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
-
-        rangesKeys.forEach(el=> createCheckBox($('pricesControl'), el, `<div class="inline-50">${ranges[el].display}</div><div style="display:inline;">(${pricesPerRange(el)})</div>`, updateState));
-        rangesM2Keys.forEach(el=> createCheckBox($('m2Control'), el, `<div class="inline-35">${rangesM2[el].display}</div><div style="display:inline">(${flatsPerM2(el)})</div>`, updateState));
-
         createCheckBox($('pricesUpDown'), "pricesUp", '<img class="arrow" src="ico/arrow_up.png"/>', updateState, false);
         createCheckBox($('pricesUpDown'), "pricesDown", '<img class="arrow" src="ico/arrow_down.png"/>', updateState, false);
 
-        map.addListener('center_changed', function() {
+        map.addListener('center_changed', () => {
             let c = map.getCenter();
             localStorage.setItem('center', JSON.stringify({lat: c.lat(), lng: c.lng()}));
         });
 
-        map.addListener('zoom_changed', function() {
-            let z = map.getZoom();
-            localStorage.setItem('zoom', z);
-        });
-
-
-//        google.maps.event.addListenerOnce(map, 'idle', function(){
-//            if (mapLoaded === false) {
-//                mapLoaded = true;
-//                updateState();
-//            }
-//        });
+        map.addListener('zoom_changed', () => { localStorage.setItem('zoom', map.getZoom()) });
+        map.addListener('tilesloaded', () => { removePopUp($('map')); processElement(null, $('map')); });
     }
 
     let processLocations = (data) => {
@@ -401,9 +368,8 @@
             location.cnt.forEach(el=> {
                 rooms.add(el.rooms);
                 uniqueTypes.add(el.type);
-                el['range_price'] = identifyRangeKey(el.current_price)
-                el['range_m2'] = identifyRangeM2Key(parseInt(el.m2))
-
+                el['range_price'] = identifyRangeKey(el.current_price);
+                el['range_m2'] = identifyRangeM2Key(parseInt(el.m2));
             });
         });
 
@@ -417,16 +383,12 @@
     let buildMarkers = () => {
         if(!map) console.error("");
         markers = locations.map(function(location, i) {
-            let lbl = null;
-            if (location.label) {
-                lbl = { text: location.label}
-            }
             var m = new google.maps.Marker({
                 mapTypeControl: true,
                 position: location,
                 type: location.type,
                 cnt: location.cnt,
-                label: lbl,
+                label: (location.label)?{text: location.label}:null,
                 title: location.title+""
                 ,icon: getIcon(location)
             });
@@ -434,7 +396,9 @@
             return m;
         });
 
-//        markers.forEach(el => el.setMap(map));
+        rangesKeys.forEach(el=> createCheckBox($('pricesControl'), el, `<div class="inline-50">${ranges[el].display}</div><div style="display:inline;">(${pricesPerRange(el)})</div>`, updateState));
+        rangesM2Keys.forEach(el=> createCheckBox($('m2Control'), el, `<div class="inline-35">${rangesM2[el].display}</div><div style="display:inline">(${flatsPerM2(el)})</div>`, updateState));
+        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
     }
 
     setTimeout(() => {getJSON('locations.json', (data) => {processLocations(data); initMap(data); buildMarkers(data); updateState()})}, 1);
