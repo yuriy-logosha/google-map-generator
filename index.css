@@ -1,0 +1,39 @@
+#map {
+    height: 100%;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.floating-panel {
+    background: none rgb(255, 255, 255); border: 0px; margin: 10px; padding: 0px; position: absolute; cursor: pointer; user-select: none; border-radius: 2px; box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px; overflow: hidden;
+    opacity: 60%;
+}
+
+.floating-panel:hover {
+    opacity: 100%;
+}
+
+.flat-checkbox-label {
+    padding: 5px;
+}
+
+.inline-50 {
+    display: inline-block;
+    width: 50px;
+}
+
+.inline-35 {
+    display: inline-block;
+    width: 35px;
+}
+
+.arrow {
+    height: 10px;
+    width: 10px;
+    padding-left: 3px;
+    padding-right: 3px;
+}

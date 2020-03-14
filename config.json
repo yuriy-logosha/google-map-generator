@@ -5,10 +5,9 @@
   "logging.level": 20,
   "db.url": "mongodb://darit.space:27017/",
   "db.url.local": "mongodb://192.168.1.61:27017/",
-  "anchor1": "REPLACE_THAT",
-  "anchor2": "REPLACE_VERSION",
+  "sscom.url": "https://www.ss.com",
   "template.path": "map_template.html",
-  "map.path": "index.html",
+  "map.path": "locations.json",
   "restart": 0,
   "version": "0.9b"
 }
