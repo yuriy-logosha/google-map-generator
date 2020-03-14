@@ -247,8 +247,10 @@
 
     function createCheckBox(parent, id, label, handler, value) {
         let oldValue = localStorage.getItem(id);
-        if (!value) {
-            value = true;
+        if (value === true || value === false) {
+            value = value;
+        } else {
+            value = true
         }
         if (oldValue) {
             let isTrue = oldValue === 'true';
