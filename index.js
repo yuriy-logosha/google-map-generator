@@ -38,30 +38,39 @@
         icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png&highlight=ff000000,ea4335?scale=1'
       },
       flat0: {
+        type: '103-я',
         icon: 'ico/103.png'
       },
       flat1: {
+        type: '104-я',
         icon: 'ico/104.png'
       },
       flat2: {
+        type: '119-я',
         icon: 'ico/119.png'
       },
       flat3: {
+        type: '467-я',
         icon: 'ico/467.png'
       },
       flat4: {
+        type: '602-я',
         icon: 'ico/602.png'
       },
       flat6: {
+        type: 'Лит. пр.',
         icon: 'ico/LTP.png'
       },
       flat7: {
+        type: 'М. сем.',
         icon: 'ico/SEM.png'
       },
       flat8: {
+        type: 'Нов.',
         icon: 'ico/NEW.png'
       },
       flat10: {
+        type: 'Спец. пр.',
         icon: 'ico/SPEC.png'
       },
       house: {
@@ -71,6 +80,14 @@
       default: {
         name: 'Default',
         icon: ''
+      },
+      getIconByType: (type) => {
+        ico = icons[Object.keys(icons).some( el => el.type === type).id]
+        if (!ico) {
+            return icons['default'].icon;
+        } else {
+            return ico.icon;
+        }
       }
     };
 
@@ -79,10 +96,7 @@
             var s = new Set();
             location.cnt.forEach(el => s.add(el.type));
             if (s.size === 1) {
-                let ic = icons['flat'+types.find(t => t.type === s.values().next().value).id]
-                if (ic) {
-                    return ic.icon
-                }
+                return icons.getIconByType(s.values().next().value)
             }
         }
         return icons['default'].icon
@@ -374,7 +388,7 @@
 
         let i = 0
         for (let uniqueType of Array.from(uniqueTypes).sort()) {
-            types[types.length]={'type': uniqueType, 'id':i};
+            types[types.length] = {'type': uniqueType, 'id':i};
             i ++;
         }
     }
