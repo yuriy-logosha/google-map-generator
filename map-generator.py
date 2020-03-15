@@ -1,4 +1,9 @@
-import pymongo, uuid, json, time, logging
+import json
+import logging
+import pymongo
+import time
+import uuid
+
 from utils import json_from_file, to_file
 
 ss_config = 'config.json'
@@ -63,7 +68,8 @@ while True:
                                 del p['ad_id']
                                 p['date'] = p['date'].strftime("%H:%M %d.%m.%Y")
                                 p['extracted_price'] = extract_price(p['price'])
-                            i['prices'] = prices
+                            if prices:
+                                i['prices'] = prices
                             i['arrow'] = 1
                             current_price = extract_price(i['price'])
                             i['current_price'] = current_price

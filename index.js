@@ -8,79 +8,42 @@
 
 
     let home = {lat: 56.95309568029149, lng: 24.1818463802915};
-    let map = {};
-    var markers = [];
-    var types = [];
-    var rooms = new Set();
-    var locations = [];
-    var main_url = "https://www.google.com/maps/vt/icon/name="
+    var map = {};
+    let markers = [];
+    let types = [];
+    let rooms = new Set();
+    let locations = [];
+    let currentMarker = false;
 
-    var house = 'assets/icons/poi/quantum/pinlet/home_pinlet-2-medium.png'
-    var heart = 'assets/icons/poi/quantum/pinlet/heart_pinlet-2-medium.png'
+    let main_url = "https://www.google.com/maps/vt/icon/name="
 
-    var highlight_red  = '&highlight=ff000000,ea4335,a50e0e'
-    var highlight_blue = '&highlight=ffffff,ffffff,4285f4,ffffff'
+    let house = 'assets/icons/poi/quantum/pinlet/home_pinlet-2-medium.png'
+    let heart = 'assets/icons/poi/quantum/pinlet/heart_pinlet-2-medium.png'
 
-    var spotlight          = 'assets/icons/spotlight/spotlight_pin_v3-1-small.png'
-    var spotlight_shadow   = 'assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png'
+    let highlight_red  = '&highlight=ff000000,ea4335,a50e0e'
+    let highlight_blue = '&highlight=ffffff,ffffff,4285f4,ffffff'
 
-    var pinlet          = 'assets/icons/poi/tactile/pinlet_v3-2-medium.png'
-    var pinlet_outline  = 'assets/icons/poi/tactile/pinlet_outline_v3-2-medium.png'
-    var pinlet_shadow   = 'assets/icons/poi/tactile/pinlet_shadow_v3-2-medium.png'
+    let spotlight          = 'assets/icons/spotlight/spotlight_pin_v3-1-small.png'
+    let spotlight_shadow   = 'assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png'
 
-    var icons = {
-      flat: {
-        name: 'Flat',
-        icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,ea4335,a50e0e?scale=1'
-      },
-      flats: {
-        name: 'Flat',
-        icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png&highlight=ff000000,ea4335?scale=1'
-      },
-      flat0: {
-        type: '103-я',
-        icon: 'ico/103.png'
-      },
-      flat1: {
-        type: '104-я',
-        icon: 'ico/104.png'
-      },
-      flat2: {
-        type: '119-я',
-        icon: 'ico/119.png'
-      },
-      flat3: {
-        type: '467-я',
-        icon: 'ico/467.png'
-      },
-      flat4: {
-        type: '602-я',
-        icon: 'ico/602.png'
-      },
-      flat6: {
-        type: 'Лит. пр.',
-        icon: 'ico/LTP.png'
-      },
-      flat7: {
-        type: 'М. сем.',
-        icon: 'ico/SEM.png'
-      },
-      flat8: {
-        type: 'Нов.',
-        icon: 'ico/NEW.png'
-      },
-      flat10: {
-        type: 'Спец. пр.',
-        icon: 'ico/SPEC.png'
-      },
-      house: {
-        name: 'House',
-        icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,f0e82e,56890e?scale=1'
-      },
-      default: {
-        name: 'Default',
-        icon: ''
-      },
+    let pinlet          = 'assets/icons/poi/tactile/pinlet_v3-2-medium.png'
+    let pinlet_outline  = 'assets/icons/poi/tactile/pinlet_outline_v3-2-medium.png'
+    let pinlet_shadow   = 'assets/icons/poi/tactile/pinlet_shadow_v3-2-medium.png'
+
+    let icons = {
+      flat: { name: 'Flat', icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,ea4335,a50e0e?scale=1'},
+      flats: { name: 'Flat', icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png&highlight=ff000000,ea4335?scale=1'},
+      flat0: { type: '103-я', icon: 'ico/103.png'},
+      flat1: { type: '104-я', icon: 'ico/104.png'},
+      flat2: { type: '119-я', icon: 'ico/119.png'},
+      flat3: { type: '467-я', icon: 'ico/467.png'},
+      flat4: { type: '602-я', icon: 'ico/602.png'},
+      flat6: { type: 'Лит. пр.', icon: 'ico/LTP.png'},
+      flat7: { type: 'М. сем.', icon: 'ico/SEM.png'},
+      flat8: { type: 'Нов.', icon: 'ico/NEW.png'},
+      flat10: { type: 'Спец. пр.', icon: 'ico/SPEC.png'},
+      house: { name: 'House', icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,f0e82e,56890e?scale=1'},
+      default: { name: 'Default', icon: ''},
       getIconByType: (type) => {
         ico = icons[Object.keys(icons).some( el => el.type === type).id]
         if (!ico) {
@@ -93,7 +56,7 @@
 
     function getIcon(location){
         if (location.type === 'flat') {
-            var s = new Set();
+            let s = new Set();
             location.cnt.forEach(el => s.add(el.type));
             if (s.size === 1) {
                 return icons.getIconByType(s.values().next().value)
@@ -112,10 +75,6 @@
     }
 
     function updateContent(address, cnt) {
-        if (document.infowindow){
-            document.infowindow.close();
-        }
-
         let urlWrapper = (content) => {return '<a target="_blank" href="{{url}}">'+content+'</a>'}
         let price = '<b>{{price}}</b>'
         let date = '<td style="text-align:right">{{date}}</td>';
@@ -139,7 +98,9 @@
         });
 
         z += '</table></div>';
-
+        if (document.infowindow) {
+            document.infowindow.close();
+        }
         document.infowindow = new google.maps.InfoWindow({content: z});
     }
 
@@ -223,10 +184,6 @@
     let rules = [type_check, range_m2_check, range_price_check];
 
     let updateState = async () => {
-        if (document.infowindow) {
-            document.infowindow.close();
-        }
-
         let documentHousesCheck = document['houses'];
 
         markers.forEach(async m => {
@@ -250,6 +207,8 @@
             m.setMap(n===0 || !getCheck(m.type).checked? null : map)
 
         });
+
+        displayMarker();
     }
 
     function toggle(checked) {
@@ -269,7 +228,7 @@
             let isTrue = oldValue === 'true';
             value = isTrue?true:false;
         }
-        let div = $$("div");
+        let div = $$("div").set('id', id+'-div');
         let checkbox = $$("input").set('type', 'checkbox').set('id', id).set('name', id).set('value', id).set('checked', value).set('className', 'flat-checkbox').set('onclick', (event) => {localStorage.setItem(id, event.target.checked); (handler)?handler(event):null;})
         let chckLbl = $$("label").set('className', "flat-checkbox-label").set('htmlFor', checkbox.id).set('innerHTML', label);
 
@@ -285,7 +244,7 @@
 
     function updateFlatsControlPanel(el) {
         document.infowindow.close();
-        var flats = el.target;
+        let flats = el.target;
         if (flats.checked) {
             rooms.forEach((el, i) => {$('flats'+el).toggle(true)});
         } else {
@@ -299,7 +258,7 @@
         if (map && map.childNodes) {
             for(c in map.childNodes) {
                 let child = map.childNodes[c];
-                if (child && child.innerText && child.innerText.includes("This page can't load Google Maps correctly")) {
+                if (child && child.innerText && child.style.cssText.includes('background-color: white; font-weight: 500; font-family: Roboto, sans-serif; padding: 15px 25px; box-sizing: border-box; top: 5px; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 5px; left: 50%; max-width: 375px; position: absolute; transform: translateX(-50%); width: calc(100% - 10px); z-index: 1;')) {
                     map.removeChild(child);
                     return;
                 }
@@ -321,11 +280,11 @@
     }
 
     function getJSON(path, callback) {
-        var httpRequest = new XMLHttpRequest();
+        let httpRequest = new XMLHttpRequest();
         httpRequest.onreadystatechange = function() {
             if (httpRequest.readyState === 4) {
                 if (httpRequest.status === 200) {
-                    var data = JSON.parse(httpRequest.responseText);
+                    let data = JSON.parse(httpRequest.responseText);
                     if (callback) callback(data);
                 }
             }
@@ -347,8 +306,6 @@
             mapTypeId: 'hybrid'
         });
 
-        document.infowindow = new google.maps.InfoWindow({content: ""});
-
         map.controls[google.maps.ControlPosition.TOP_LEFT].push($('roomsControl'));
         map.controls[google.maps.ControlPosition.TOP_LEFT].push($('housesControl'));
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('typesControl'));
@@ -356,8 +313,7 @@
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('m2Control'));
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('pricesUpDown'));
 
-        types.forEach(el => createCheckBox($('typesControl'), buildTypeId(el.id), el.type));
-        google.maps.event.addDomListener($('typesControl'), 'click', updateState);
+        document.infowindow = new google.maps.InfoWindow({content: ""});
 
         createCheckBox($('housesControl'), "houses", "Houses", updateState);
         createCheckBox($('roomsControl'), "flats", "Flats", updateFlatsControlPanel);
@@ -371,6 +327,8 @@
 
         map.addListener('zoom_changed', () => { localStorage.setItem('zoom', map.getZoom()) });
         map.addListener('tilesloaded', () => { removePopUp($('map')); processElement(null, $('map')); });
+        google.maps.event.addDomListener($('typesControl'), 'click', updateState);
+
     }
 
     let processLocations = (data) => {
@@ -393,10 +351,24 @@
         }
     }
 
+    let displayMarker = function () {
+        if(!map) console.error("No MAP initialized yet.");
+        if (!currentMarker || !currentMarker.getMap()) {
+            return;
+        }
+
+        updateContent(currentMarker.title, currentMarker.cnt);
+        document.infowindow.open(map, currentMarker);
+    }
+
     let buildMarkers = () => {
-        if(!map) console.error("");
+        if(!map) console.error("No MAP initialized yet.");
+
+        types.forEach(el => createCheckBox($('typesControl'), buildTypeId(el.id), el.type));
+
         markers = locations.map(function(location, i) {
-            var m = new google.maps.Marker({
+            let m = new google.maps.Marker({
+                tag: location.lat + '-' + location.lng,
                 mapTypeControl: true,
                 position: location,
                 type: location.type,
@@ -405,7 +377,11 @@
                 title: location.title+""
                 ,icon: getIcon(location)
             });
-            m.addListener("click", function () {updateContent(this.title, this.cnt); document.infowindow.open(map, m);});
+            m.addListener("click", function() { currentMarker = this; displayMarker()});
+            if (currentMarker && currentMarker.getMap() && currentMarker.position.lat() === m.position.lat() && currentMarker.position.lng() === m.position.lng()) {
+                currentMarker = m;
+                updateContent(currentMarker.title, currentMarker.cnt);
+            }
             return m;
         });
 
@@ -414,5 +390,75 @@
         Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
     }
 
-    setTimeout(() => {getJSON('locations.json', (data) => {processLocations(data); initMap(data); buildMarkers(data); updateState()})}, 1);
+
+    let reBuildMarkers = () => {
+        if(!map) console.error("No MAP initialized yet.");
+
+        types.forEach(el => createCheckBox($('typesControl'), buildTypeId(el.id), el.type));
+
+        markers.forEach((m) => {
+            let l = locations.find(el => m.tag === el.lat + '-' + el.lng);
+            if(l.length === 0){
+                delete m;
+                if (currentMarker && currentMarker.getMap() && currentMarker.position.lat() === m.position.lat() && currentMarker.position.lng() === m.position.lng()) {
+                    currentMarker = false;
+                    if (document.infowindow) {
+                        document.infowindow.close();
+                    }
+                }
+            } else {
+                m.type = l.type;
+                m.cnt = l.cnt;
+                m.label = (l.label)?{text: l.label}:null;
+                m.title = l.title+"";
+                m.icon = getIcon(l);
+                if (currentMarker && currentMarker.getMap() && currentMarker.position.lat() === m.position.lat() && currentMarker.position.lng() === m.position.lng()) {
+                    currentMarker = m;
+                    updateContent(currentMarker.title, currentMarker.cnt);
+                }
+            }
+
+        });
+
+        locations.map(function(location, i) {
+            if(markers.find(el => el.tag === location.lat + '-' + location.lng).length === 0){
+                let m = new google.maps.Marker({
+                    tag: location.lat + '-' + location.lng,
+                    mapTypeControl: true,
+                    position: location,
+                    type: location.type,
+                    cnt: location.cnt,
+                    label: (location.label)?{text: location.label}:null,
+                    title: location.title+""
+                    ,icon: getIcon(location)
+                });
+                m.addListener("click", function() { currentMarker = this; displayMarker()});
+                markers.push(m);
+            }
+        });
+
+        rangesKeys.forEach(el=> createCheckBox($('pricesControl'), el, `<div class="inline-50">${ranges[el].display}</div><div style="display:inline;">(${pricesPerRange(el)})</div>`, updateState));
+        rangesM2Keys.forEach(el=> createCheckBox($('m2Control'), el, `<div class="inline-35">${rangesM2[el].display}</div><div style="display:inline">(${flatsPerM2(el)})</div>`, updateState));
+        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
+    }
+
+    let cleanMarkers = () => {
+        Array.from(rooms).sort().forEach(el=> $('roomsControl').removeChild($(buildFlatId(el)+'-div')));
+        rooms = new Set();
+
+        types.forEach(el => $('typesControl').removeChild($(buildTypeId(el.id)+'-div')));
+
+        types = [];
+
+        rangesKeys.forEach(el=> $('pricesControl').removeChild($(el+'-div')));
+        rangesM2Keys.forEach(el=> $('m2Control').removeChild($(el+'-div')));
+    }
+
+
+    let loadData = () => {getJSON('locations.json', (data) => {processLocations(data); initMap(); buildMarkers(); updateState()})}
+    let reLoadData = () => {getJSON('locations.json', (data) => {cleanMarkers(); processLocations(data); reBuildMarkers(); updateState()})}
+
+    setTimeout(loadData, 1);
+
+    setInterval(reLoadData, 60000);
 
