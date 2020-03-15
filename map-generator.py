@@ -72,7 +72,7 @@ while True:
                                 if last_old_price < current_price:
                                     i['arrow'] = 0
                             del i['_id']
-                            if 'outdated' in i:
+                            if 'outdated' in i and i['outdated']:
                                 del i['url']
                             else:
                                 i['url'] = '/'.join([config['sscom.url'], 'msg', 'ru', i['url']])
