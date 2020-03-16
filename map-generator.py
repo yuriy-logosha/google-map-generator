@@ -1,8 +1,9 @@
 import json
 import logging
-import pymongo
 import time
 import uuid
+
+import pymongo
 
 from utils import json_from_file, to_file
 
@@ -51,7 +52,7 @@ while True:
         addresses = list(ss_ads.ads.distinct("address_lv", {}))
         logger.debug("Receive list of addresses: %s", addresses)
         for a in addresses:
-            for address_geodata in list(ss_ads.geodata.find({'address_lv': a})):
+            for address_geodata in list(ss_ads.geodata.find({'address': a})):
                 if 'geodata' in address_geodata and address_geodata['geodata']:
                     logger.debug("Found geodata for: %s", a)
                     id = str(uuid.uuid4()).replace('-', '_')
