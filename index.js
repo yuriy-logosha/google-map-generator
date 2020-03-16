@@ -421,19 +421,22 @@
         });
 
         locations.map(function(location, i) {
-            if(markers && markers.length && markers.find(el => el.tag === location.lat + '-' + location.lng).length === 0){
-                let m = new google.maps.Marker({
-                    tag: location.lat + '-' + location.lng,
-                    mapTypeControl: true,
-                    position: location,
-                    type: location.type,
-                    cnt: location.cnt,
-                    label: (location.label)?{text: location.label}:null,
-                    title: location.title+""
-                    ,icon: getIcon(location)
-                });
-                m.addListener("click", function() { currentMarker = this; displayMarker()});
-                markers.push(m);
+            if(markers && markers.length){
+                let mrker = markers.find(el => el.tag === location.lat + '-' + location.lng);
+                if (mrker && mrker.length === 0) {
+                    let m = new google.maps.Marker({
+                        tag: location.lat + '-' + location.lng,
+                        mapTypeControl: true,
+                        position: location,
+                        type: location.type,
+                        cnt: location.cnt,
+                        label: (location.label)?{text: location.label}:null,
+                        title: location.title+""
+                        ,icon: getIcon(location)
+                    });
+                    m.addListener("click", function() { currentMarker = this; displayMarker()});
+                    markers.push(m);
+                }
             }
         });
 
