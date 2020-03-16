@@ -421,7 +421,7 @@
         });
 
         locations.map(function(location, i) {
-            if(markers.find(el => el.tag === location.lat + '-' + location.lng).length === 0){
+            if(markers && markers.length && markers.find(el => el.tag === location.lat + '-' + location.lng).length === 0){
                 let m = new google.maps.Marker({
                     tag: location.lat + '-' + location.lng,
                     mapTypeControl: true,
