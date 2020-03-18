@@ -5,11 +5,18 @@
     };
     let $ = (id) => document.getElementById(id);
     let $doc = (id) => document[id];
+    let $get = (id) => {
+            let _o = $(id);
+            _o.set = (property, value) => {_o[property] = value; return _o}
+            _o.css = (property, value) => {_o.style[property] = value; return _o}
+            return _o;
+        };
 
 
     let home = {lat: 56.95309568029149, lng: 24.1818463802915};
     var map = {};
     let markers = [];
+    let infowindow = null;
     let types = [];
     let rooms = new Set();
     let locations = [];
@@ -44,25 +51,28 @@
       flat10: { type: 'Спец. пр.', icon: 'ico/SPEC.png'},
       house: { name: 'House', icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,f0e82e,56890e?scale=1'},
       default: { name: 'Default', icon: ''},
-      getIconByType: (type) => {
-        ico = icons[Object.keys(icons).some( el => el.type === type).id]
-        if (!ico) {
-            return icons['default'].icon;
-        } else {
-            return ico.icon;
+      default2: { name: 'Default', icon: 'ico/spotlight-poi-dotless2-2.png'},
+      getIconByType: (type, defaultValue='default') => {
+        for (let key in icons) {
+            let el = icons[key];
+            if (el.type === type) {
+                return el.icon;
+            }
         }
+
+        return icons[defaultValue].icon;
       }
     };
 
-    function getIcon(location){
-        if (location.type === 'flat') {
-            let s = new Set();
-            location.cnt.forEach(el => s.add(el.type));
-            if (s.size === 1) {
-                return icons.getIconByType(s.values().next().value)
-            }
+    let getIcon = (location, defaultValue='default') => {
+        if (location.type != 'flat') {
+            return icons[defaultValue].icon
         }
-        return icons['default'].icon
+        let types = new Set(location.cnt.map(el => el.type));
+        if (types.size === 1) {
+            return icons.getIconByType(types.values().next().value, defaultValue)
+        }
+        return icons[defaultValue].icon
     }
 
     function stringTemplateParser(expression, valueObj) {
@@ -98,23 +108,26 @@
         });
 
         z += '</table></div>';
-        if (document.infowindow) {
-            document.infowindow.close();
-        }
-        document.infowindow = new google.maps.InfoWindow({content: z});
+        if (infowindow) infowindow.close();
+        infowindow = new google.maps.InfoWindow({content: z});
     }
 
     let ranges = {
-        range1: { display: '<50k', from: 0, to: 50000},
-        range2: { display: '50-100k', from: 50001, to: 100000},
+        range1: { display: '<50k',     from: 0, to: 50000},
+        range2: { display: '50-100k',  from: 50001, to: 100000},
         range3: { display: '100-150k', from: 100001, to: 150000},
         range4: { display: '150-200k', from: 150001, to: 200000},
         range5: { display: '200-300k', from: 200001, to: 300000},
         range6: { display: '300-500k', from: 300001, to: 500000},
-        range7: { display: '>500k', from: 500001, to: Number.MAX_SAFE_INTEGER}
+        range7: { display: '>500k',    from: 500001, to: Number.MAX_SAFE_INTEGER}
     };
-
-    let rangesKeys = Object.keys(ranges);
+    let rangesM2 = {
+        m2range1: {display: '< 50',    from: 0, to: 50},
+        m2range2: {display: '51-60',   from: 51, to: 60},
+        m2range3: {display: '61-90',   from: 61, to: 90},
+        m2range4: {display: '91-120',  from: 91, to: 120},
+        m2range5: {display: '> 121',   from: 121, to: 999999},
+    }
 
     let identifyRangeKey = (p) => {
         for(idx in rangesKeys) {
@@ -126,29 +139,6 @@
        return rangesKeys[rangesKeys.length-1];
     }
 
-    let isEnabled = (el) => {return !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)}
-    let buildFlatId = (key) => `flats${key}`;
-    let buildTypeId = (key) => `type${key}`;
-    let buildHouseId = (key) => `house${key}`;
-
-    let pricesPerRange = (rangeKey) => {
-        let calculateItems = (total, el) => {
-            return total + el.cnt.filter(el=> {let n = el.current_price; let r = ranges[rangeKey]; return n >= r.from && n < r.to}).length;
-        }
-
-        return markers.reduce(calculateItems, 0);
-    }
-
-    let rangesM2 = {
-        m2range1: {display: '< 50', from: 0, to: 50},
-        m2range2: {display: '51-60', from: 51, to: 60},
-        m2range3: {display: '61-90', from: 61, to: 90},
-        m2range4: {display: '91-120', from: 91, to: 120},
-        m2range5: {display: '  > 121', from: 121, to: 999999},
-    }
-
-    let rangesM2Keys = Object.keys(rangesM2);
-
     let identifyRangeM2Key = (m2) => {
         for(idx in rangesM2Keys) {
             let rangeName = rangesM2Keys[idx];
@@ -159,6 +149,14 @@
        return rangesM2Keys[rangesM2Keys.length-1];
     }
 
+    let pricesPerRange = (rangeKey) => {
+        let calculateItems = (total, el) => {
+            return total + el.cnt.filter(el=> {let n = el.current_price; let r = ranges[rangeKey]; return n >= r.from && n < r.to}).length;
+        }
+
+        return markers.reduce(calculateItems, 0);
+    }
+
     let flatsPerM2 = (range) => {
         let calculateItems = (total, el) => {
             return total + el.cnt.filter(el=> {let n = parseInt(el.m2); let r = rangesM2[range]; return n > r.from && n <= r.to}).length;
@@ -167,21 +165,24 @@
         return markers.reduce(calculateItems, 0);
     }
 
+    let rangesKeys = Object.keys(ranges);
+    let rangesM2Keys = Object.keys(rangesM2);
+    let isEnabled = (el) => {return !el.hasOwnProperty('enabled') || (el.hasOwnProperty('enabled') && el.enabled)}
+    let buildFlatId = (key) => `flats${key}`;
+    let buildTypeId = (key) => `type${key}`;
+    let buildHouseId = (key) => `house${key}`;
     let houses = $('houses');
     let flats = $('flats');
-
     let getHouses = () => {if (!houses) {houses = $('houses')} return houses}
     let getFlats = () => {if (!flats) {flats = $('flats')} return flats}
-
-    let getCheck = (type) => {
-        return (type === 'house')? getHouses():getFlats();
-    }
-
     let range_m2_check = (el) => {$doc(el.range_m2).checked}
     let range_price_check = (el) => {$doc(el.range_price).checked}
     let type_check = (el) => {$doc(`type${types.find(t => t.type === el.type).id}`).checked}
-
     let rules = [type_check, range_m2_check, range_price_check];
+
+    let getHouseOrFlatCheck = (type) => {
+        return (type === 'house')? getHouses():getFlats();
+    }
 
     let updateState = async () => {
         let documentHousesCheck = document['houses'];
@@ -204,17 +205,12 @@
             });
             //let n = m.cnt.filter(el => isEnabled(el)).length;
             m.setLabel(n > 1? n+"" : null);
-            m.setMap(n===0 || !getCheck(m.type).checked? null : map)
+            m.setMap(n===0 || !getHouseOrFlatCheck(m.type).checked? null : map)
 
         });
 
         displayMarker();
-    }
-
-    function toggle(checked) {
-        if (checked != this.checked) {
-            this.click();
-        }
+        setTimeout(() => {$get('reloader').css('display', 'none')}, 3000);
     }
 
     function createCheckBox(parent, id, label, handler, value) {
@@ -234,7 +230,11 @@
 
         document[id] = checkbox;
 
-        checkbox.toggle = toggle;
+        checkbox.toggle = (checked) => {
+            if (checked != this.checked) {
+                this.click();
+            }
+        };
 
         div.appendChild(checkbox);
         div.appendChild(chckLbl);
@@ -242,41 +242,39 @@
         return checkbox;
     }
 
-    function updateFlatsControlPanel(el) {
-        document.infowindow.close();
-        let flats = el.target;
-        if (flats.checked) {
-            rooms.forEach((el, i) => {$('flats'+el).toggle(true)});
-        } else {
-            rooms.forEach((el, i) => {$('flats'+el).toggle(false)});
-        }
+    let updateFlatsControlPanel = (el) => {
+        infowindow.close();
+        rooms.forEach((el, i) => {$('flats'+el).toggle(el.target.checked)});
         updateState();
     }
 
-
     function removePopUp(map) {
-        if (map && map.childNodes) {
-            for(c in map.childNodes) {
-                let child = map.childNodes[c];
-                if (child && child.innerText && child.style.cssText.includes('background-color: white; font-weight: 500; font-family: Roboto, sans-serif; padding: 15px 25px; box-sizing: border-box; top: 5px; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 5px; left: 50%; max-width: 375px; position: absolute; transform: translateX(-50%); width: calc(100% - 10px); z-index: 1;')) {
-                    map.removeChild(child);
-                    return;
-                }
-            }
+        if (!map || !map.childNodes) {
+            return;
         }
+        map.childNodes.forEach( child => {
+            if (child && child.innerText && child.style.cssText.includes('background-color: white; font-weight: 500; font-family: Roboto, sans-serif; padding: 15px 25px; box-sizing: border-box; top: 5px; border: 1px solid rgba(0, 0, 0, 0.12); border-radius: 5px; left: 50%; max-width: 375px; position: absolute; transform: translateX(-50%); width: calc(100% - 10px); z-index: 1;')) {
+                map.removeChild(child);
+                return true;
+            }
+        });
     }
 
     function processElement(parent, el) {
-        if (parent && el && el.style && el.style.cssText.includes('background-color: rgba(0, 0, 0, 0.5)')) {
-            parent.removeChild(el)
+        if (!el) {
+            return
+        }
+
+        if (parent && el.style && el.style.cssText.includes('background-color: rgba(0, 0, 0, 0.5)')) {
+            parent.removeChild(el);
             return;
         }
 
-        if (el && el.childNodes) {
-            for(c in el.childNodes) {
-                processElement(el, el.childNodes[c]);
-            }
+        if (!el.childNodes) {
+            return
         }
+
+        el.childNodes.forEach(child => processElement(el, child))
     }
 
     function getJSON(path, callback) {
@@ -312,8 +310,9 @@
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('pricesControl'));
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('m2Control'));
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('pricesUpDown'));
+        map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push($('reloader'));
 
-        document.infowindow = new google.maps.InfoWindow({content: ""});
+        infowindow = new google.maps.InfoWindow({content: ""});
 
         createCheckBox($('housesControl'), "houses", "Houses", updateState);
         createCheckBox($('roomsControl'), "flats", "Flats", updateFlatsControlPanel);
@@ -326,7 +325,7 @@
         });
 
         map.addListener('zoom_changed', () => { localStorage.setItem('zoom', map.getZoom()) });
-        map.addListener('tilesloaded', () => { removePopUp($('map')); processElement(null, $('map')); });
+        map.addListener('tilesloaded', () => { let m = $('map'); removePopUp(m); processElement(null, m); });
         google.maps.event.addDomListener($('typesControl'), 'click', updateState);
 
     }
@@ -358,7 +357,7 @@
         }
 
         updateContent(currentMarker.title, currentMarker.cnt);
-        document.infowindow.open(map, currentMarker);
+        infowindow.open(map, currentMarker);
     }
 
     let buildMarkers = () => {
@@ -367,17 +366,7 @@
         types.forEach(el => createCheckBox($('typesControl'), buildTypeId(el.id), el.type));
 
         markers = locations.map(function(location, i) {
-            let m = new google.maps.Marker({
-                tag: location.lat + '-' + location.lng,
-                mapTypeControl: true,
-                position: location,
-                type: location.type,
-                cnt: location.cnt,
-                label: (location.label)?{text: location.label}:null,
-                title: location.title+""
-                ,icon: getIcon(location)
-            });
-            m.addListener("click", function() { currentMarker = this; displayMarker()});
+            let m = buildMarker(location);
             if (currentMarker && currentMarker.getMap() && currentMarker.position.lat() === m.position.lat() && currentMarker.position.lng() === m.position.lng()) {
                 currentMarker = m;
                 updateContent(currentMarker.title, currentMarker.cnt);
@@ -385,11 +374,8 @@
             return m;
         });
 
-        rangesKeys.forEach(el=> createCheckBox($('pricesControl'), el, `<div class="inline-50">${ranges[el].display}</div><div style="display:inline;">(${pricesPerRange(el)})</div>`, updateState));
-        rangesM2Keys.forEach(el=> createCheckBox($('m2Control'), el, `<div class="inline-35">${rangesM2[el].display}</div><div style="display:inline">(${flatsPerM2(el)})</div>`, updateState));
-        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
+//        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
     }
-
 
     let reBuildMarkers = () => {
         if(!map) console.error("No MAP initialized yet.");
@@ -397,16 +383,17 @@
         types.forEach(el => createCheckBox($('typesControl'), buildTypeId(el.id), el.type));
 
         markers.forEach((m) => {
-            let l = locations.find(el => m.tag === el.lat + '-' + el.lng);
-            if(l.length === 0){
-                delete m;
+            let l = locations.find(el => m.position.lat() === el.lat && m.position.lng() === el.lng);
+            if(!l || l.length === 0){
+                m.setMap(null);
+                markers.splice(markers.indexOf(m), 1);
                 if (currentMarker && currentMarker.getMap() && currentMarker.position.lat() === m.position.lat() && currentMarker.position.lng() === m.position.lng()) {
                     currentMarker = false;
-                    if (document.infowindow) {
-                        document.infowindow.close();
+                    if (infowindow) {
+                        infowindow.close();
                     }
                 }
-            } else {
+            } else if(l) {
                 m.type = l.type;
                 m.cnt = l.cnt;
                 m.label = (l.label)?{text: l.label}:null;
@@ -417,35 +404,37 @@
                     updateContent(currentMarker.title, currentMarker.cnt);
                 }
             }
-
         });
 
         locations.map(function(location, i) {
-            if(markers && markers.length){
-                let mrker = markers.find(el => el.tag === location.lat + '-' + location.lng);
-                if (mrker && mrker.length === 0) {
-                    let m = new google.maps.Marker({
-                        tag: location.lat + '-' + location.lng,
-                        mapTypeControl: true,
-                        position: location,
-                        type: location.type,
-                        cnt: location.cnt,
-                        label: (location.label)?{text: location.label}:null,
-                        title: location.title+""
-                        ,icon: getIcon(location)
-                    });
-                    m.addListener("click", function() { currentMarker = this; displayMarker()});
-                    markers.push(m);
-                }
+            let mrker = markers.find(el => location.lat === el.position.lat() && location.lng === el.position.lng());
+            if (!mrker || (mrker && mrker.length === 0)) {
+                markers.push(buildMarker(location));
             }
         });
 
-        rangesKeys.forEach(el=> createCheckBox($('pricesControl'), el, `<div class="inline-50">${ranges[el].display}</div><div style="display:inline;">(${pricesPerRange(el)})</div>`, updateState));
-        rangesM2Keys.forEach(el=> createCheckBox($('m2Control'), el, `<div class="inline-35">${rangesM2[el].display}</div><div style="display:inline">(${flatsPerM2(el)})</div>`, updateState));
-        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
+//        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
+    }
+
+    let buildTag = (a, b) => {return [a, b].join('')}
+
+    let buildMarker = (location) => {
+        let m = new google.maps.Marker({
+            tag: buildTag(location.lat, location.lng),
+            mapTypeControl: true,
+            position: location,
+            type: location.type,
+            cnt: location.cnt,
+            label: (location.label)?{text: location.label}:null,
+            title: location.title+""
+            ,icon: getIcon(location)
+        });
+        m.addListener("click", function() { currentMarker = this; displayMarker()});
+        return m;
     }
 
     let cleanMarkers = () => {
+        $get('reloader').css('display', 'block');
         Array.from(rooms).sort().forEach(el=> $('roomsControl').removeChild($(buildFlatId(el)+'-div')));
         rooms = new Set();
 
@@ -457,11 +446,23 @@
         rangesM2Keys.forEach(el=> $('m2Control').removeChild($(el+'-div')));
     }
 
+    let removeChilds = (obj) => {
+        if (!obj || !obj.childNodes || !obj.childNodes.length) {
+            return;
+        }
+        let childs = Array.from(obj.childNodes);
+        for (let i in childs){
+            let child = childs[i];
+            obj.removeChild(child);
+        }
+    }
 
-    let loadData = () => {getJSON('locations.json', (data) => {processLocations(data); initMap(); buildMarkers(); updateState()})}
-    let reLoadData = () => {getJSON('locations.json', (data) => {cleanMarkers(); processLocations(data); reBuildMarkers(); updateState()})}
+    let buildRanges = () => rangesKeys.forEach(el=> createCheckBox($('pricesControl'), el, `<div class="inline-50">${ranges[el].display}</div><div style="display:inline;">(${pricesPerRange(el)})</div>`, updateState))
+    let buildRangesM2 = () => rangesM2Keys.forEach(el=> createCheckBox($('m2Control'), el, `<div class="inline-35">${rangesM2[el].display}</div><div style="display:inline">(${flatsPerM2(el)})</div>`, updateState))
+    let buildRooms = () => Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState))
+    let loadData = () => {getJSON('locations.json', (data) => {processLocations(data); initMap(); buildMarkers(); buildRanges(); buildRangesM2(); buildRooms(); updateState()})}
+    let reLoadData = () => {getJSON('locations.json', (data) => {cleanMarkers(); processLocations(data); reBuildMarkers(); buildRanges(); buildRangesM2(); buildRooms(); updateState()})}
 
-    setTimeout(loadData, 1);
+    setTimeout(loadData, 1)
 
-    setInterval(reLoadData, 60000);
-
+    setInterval(reLoadData, 60000)
