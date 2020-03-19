@@ -40,13 +40,13 @@
     let icons = {
       flat: { name: 'Flat', icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,ea4335,a50e0e?scale=1'},
       flats: { name: 'Flat', icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png&highlight=ff000000,ea4335?scale=1'},
-      flat0: { type: '103-я', icon: 'ico/103.png'},
-      flat1: { type: '104-я', icon: 'ico/104.png'},
-      flat2: { type: '119-я', icon: 'ico/119.png'},
-      flat3: { type: '467-я', icon: 'ico/467.png'},
-      flat4: { type: '602-я', icon: 'ico/602.png'},
+      flat0: { type: '103-я', icon: 'ico/103.png', info: '1-34m2, 2-51m2, 3-66m2', urls:['https://m.cityreal.lv/en/info/apartment-projects/103-series', 'http://www.parplanosana.lv/ru/paarplaanoshanas-varianti-177781/103-serija#.XnO5V5MzZtY']},
+      flat1: { type: '104-я', icon: 'ico/104.png', info: '1-42m2, 2-57m2, 3-69m2', urls:['https://m.cityreal.lv/en/info/apartment-projects/104-series', 'http://www.parplanosana.lv/ru/paarplaanoshanas-varianti-177781/104-seerija-272681']},
+      flat2: { type: '119-я', icon: 'ico/119.png', info: '1-42m2, 2-55m2, 3-62m2, 4-84m2', urls:['https://m.cityreal.lv/en/info/apartment-projects/119-series', 'http://www.parplanosana.lv/ru/paarplaanoshanas-varianti-177781/119seerija-480831']},
+      flat3: { type: '467-я', icon: 'ico/467.png', info: '1-31m2, 2-47m2, 3-57m2, 4-72m2', urls:['https://m.cityreal.lv/en/info/apartment-projects/467-series', 'http://www.parplanosana.lv/ru/paarplaanoshanas-varianti-177781/467-serija']},
+      flat4: { type: '602-я', icon: 'ico/602.png', info: '1-35m2, 2-41m2, 2-49m2, 3-63m2, 4-73m2, 5-78m2', urls:['https://m.cityreal.lv/en/info/apartment-projects/602-series', 'http://www.parplanosana.lv/ru/paarplaanoshanas-varianti-177781/602-seerija-272421']},
       flat6: { type: 'Лит. пр.', icon: 'ico/LTP.png'},
-      flat7: { type: 'М. сем.', icon: 'ico/SEM.png'},
+      flat7: { type: 'М. сем.', icon: 'ico/SEM.png', info: '1-36m2', urls:['https://m.cityreal.lv/en/info/apartment-projects/small-family-project', 'http://www.parplanosana.lv/ru/paarplaanoshanas-varianti-177781/malosemejka']},
       flat8: { type: 'Нов.', icon: 'ico/NEW.png'},
       flat10: { type: 'Спец. пр.', icon: 'ico/SPEC.png'},
       house: { name: 'House', icon: 'https://www.google.com/maps/vt/icon/name=assets/icons/spotlight/spotlight_pin_v3_shadow-1-small.png,assets/icons/spotlight/spotlight_pin_v3-1-small.png,assets/icons/spotlight/spotlight_pin_v3_dot-1-small.png&highlight=ff000000,f0e82e,56890e?scale=1'},
@@ -85,11 +85,11 @@
     }
 
     function updateContent(address, cnt) {
-        let urlWrapper = (content) => {return '<a target="_blank" href="https://www.ss.com/msg/{{url}}">'+content+'</a>'}
+        let urlWrapper = (content) => {return '<a target="_blank" href="https://www.ss.com/msg/ru/real-estate/{{url}}">'+content+'</a>'}
         let price = '<b>{{price}}</b>'
         let date = '<td style="text-align:right">{{date}}</td>';
         let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">';
-        let str1_1 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{level}}</td><td style="text-align:right">{{price_m2}}/m2</td><td style="text-align:right">';
+        let str1_1 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{lvl}}</td><td style="text-align:right">{{pm2}}/m2</td><td style="text-align:right">';
         let z = `<div class="poi-info-window gm-style"><div class="title full-width">${address}</div><table>`;
         cnt.sort((a, b) => a.rooms - b.rooms)
             .filter(el => isEnabled(el))
@@ -113,7 +113,7 @@
     }
 
     let ranges = {
-        range1: { display: '< 50k',     from: 0, to: 50000},
+        range1: { display: '< 50k',    from: 0, to: 50000},
         range2: { display: '50-100k',  from: 50001, to: 100000},
         range3: { display: '100-150k', from: 100001, to: 150000},
         range4: { display: '150-200k', from: 150001, to: 200000},
@@ -150,7 +150,7 @@
 
     let pricesPerRange = (rangeKey) => {
         let calculateItems = (total, el) => {
-            return total + el.cnt.filter(el=> {let n = el.current_price; let r = ranges[rangeKey]; return n >= r.from && n < r.to}).length;
+            return total + el.cnt.filter(el=> {let n = el.c_p; let r = ranges[rangeKey]; return n >= r.from && n < r.to}).length;
         }
 
         return markers.reduce(calculateItems, 0);
@@ -194,8 +194,8 @@
                     el.enabled =
                     $doc(el.range_m2).checked && $doc(el.range_price).checked &&
                     $doc(`type${types.find(t => t.type === el.type).id}`).checked &&
-                    ($doc('pricesDown').checked?el.hasOwnProperty('prices') && el.prices.length >= 1 && el.prices[0].extracted_price > el.current_price:true) &&
-                    ($doc('pricesUp').checked?el.hasOwnProperty('prices') && el.prices.length >= 1 && el.prices[0].extracted_price < el.current_price:true);
+                    ($doc('pricesDown').checked?el.hasOwnProperty('prices') && el.prices.length >= 1 && el.prices[0].extracted_price > el.c_p:true) &&
+                    ($doc('pricesUp').checked?el.hasOwnProperty('prices') && el.prices.length >= 1 && el.prices[0].extracted_price < el.c_p:true);
 
                     if (el.enabled) {
                         n++;
@@ -231,7 +231,7 @@
 
         checkbox.toggle = (checked) => {
             if (checked != this.checked) {
-                this.click();
+                checkbox.click();
             }
         };
 
@@ -241,9 +241,9 @@
         return checkbox;
     }
 
-    let updateFlatsControlPanel = (el) => {
+    let updateFlatsControlPanel = (event) => {
         infowindow.close();
-        rooms.forEach((el, i) => {$('flats'+el).toggle(el.target.checked)});
+        rooms.forEach((el, i) => {$('flats'+el).toggle(event.target.checked)});
         updateState();
     }
 
@@ -343,11 +343,12 @@
         locations = data;
 
         let uniqueTypes = new Set();
+
         locations.forEach((location, i) => {
             location.cnt.forEach(el=> {
                 rooms.add(el.rooms);
                 uniqueTypes.add(el.type);
-                el['range_price'] = identifyRangeKey(el.current_price);
+                el['range_price'] = identifyRangeKey(el.c_p);
                 el['range_m2'] = identifyRangeM2Key(el.m2);
             });
         });
@@ -382,8 +383,6 @@
             }
             return m;
         });
-
-//        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
     }
 
     let reBuildMarkers = () => {
@@ -405,7 +404,7 @@
             } else if(l) {
                 m.type = l.type;
                 m.cnt = l.cnt;
-                m.label = (l.label)?{text: l.label}:null;
+                m.label = (l.cnt)?{text: l.cnt.length + ''}:null;
                 m.title = l.title+"";
                 m.icon = getIcon(l);
                 if (currentMarker && currentMarker.getMap() && currentMarker.position.lat() === m.position.lat() && currentMarker.position.lng() === m.position.lng()) {
@@ -421,8 +420,6 @@
                 markers.push(buildMarker(location));
             }
         });
-
-//        Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState));
     }
 
     let buildTag = (a, b) => {return [a, b].join('')}
@@ -434,7 +431,7 @@
             position: location,
             type: location.type,
             cnt: location.cnt,
-            label: (location.label)?{text: location.label}:null,
+            label: (location.cnt)?{text: location.cnt.length+''}:null,
             title: location.title+""
             ,icon: getIcon(location)
         });

@@ -39,6 +39,45 @@ def extract_price(s_price: str) -> int:
     return int(s_price.replace('€', '').replace(',', ''))
 
 
+def build_cnt(date, m2, prices, arrow, pm2, lvl, url, c_p, rooms, price, type):
+    return {'date': date, 'm2': m2, 'prices': prices, 'arrow': arrow, 'pm2': pm2, 'lvl': lvl, 'url': url, 'c_p': c_p, 'rooms': rooms, 'price': price, 'type': type}
+
+
+def build_marker(a, ads, marker):
+    type = 'flat'
+    if all(z['type'] in ['Ч. дом'] for z in ads):
+        type = 'house'
+
+    cnts = []
+    for i in ads:
+        rooms = '-'
+        if 'rooms' in i and '-' not in i['rooms']:
+            rooms = int(i['rooms'])
+        prices = list(ss_ads.ads.find({'$and': [{'kind': 'old_price'}, {'ad_id': i['_id']}]}).sort('date', pymongo.DESCENDING))
+        for p in prices:
+            del p['_id']
+            del p['ad_id']
+            p['date'] = p['date'].strftime("%H:%M %d.%m.%Y")
+            p['extracted_price'] = extract_price(p['price'])
+
+        current_price = extract_price(i['price'])
+
+        arrow = 1
+        if prices and len(prices) > 0:
+            last_old_price = extract_price(prices[0]['price'])
+            if last_old_price < current_price:
+                arrow = 0
+
+        url = ''
+        if 'outdated' in i and i['outdated']:
+            pass
+        else:
+            url = i['url'].replace('real-estate/', '')
+        cnts.append(build_cnt(i['date'].strftime("%H:%M %d.%m.%Y"), int(i['m2']), prices, arrow, i['price_m2'], i['level'], url, current_price, rooms, i['price'], i['type']))
+
+    return {'title': a, 'cnt': cnts, 'type': type, 'lat': marker['lat'], 'lng': marker['lng']}
+
+
 logger.info("Starting map generator.")
 while True:
     myclient = pymongo.MongoClient(config['db.url.local'])
@@ -59,42 +98,8 @@ while True:
                     marker = address_geodata['geodata'][0]['geometry']['location']
                     ads = list(ss_ads.ads.find({'kind': 'ad', "address_lv": a}))
                     if ads:
-                        for i in ads:
-                            i['date'] = i['date'].strftime("%H:%M %d.%m.%Y")
-                            i['m2'] = int(i['m2'])
-                            if 'rooms' not in i:
-                                i['rooms'] = '-'
-                            prices = list(ss_ads.ads.find({'$and': [{'kind': 'old_price'}, {'ad_id': i['_id']}]}).sort('date', pymongo.DESCENDING))
-                            for p in prices:
-                                del p['_id']
-                                del p['ad_id']
-                                p['date'] = p['date'].strftime("%H:%M %d.%m.%Y")
-                                p['extracted_price'] = extract_price(p['price'])
-                            if prices:
-                                i['prices'] = prices
-                            i['arrow'] = 1
-                            current_price = extract_price(i['price'])
-                            i['current_price'] = current_price
-                            if prices and len(prices)>0:
-                                last_old_price = extract_price(prices[0]['price'])
-                                if last_old_price < current_price:
-                                    i['arrow'] = 0
-                            del i['_id']
-                            if 'outdated' in i and i['outdated']:
-                                del i['url']
-                            else:
-                                i['url'] = '/'.join(['ru', i['url']])
-                        header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
-                        if len(ads) > 1:
-                            marker['label'] = str(len(ads))
-                        marker['title'] = a
-                        marker['cnt'] = ads
-                        type = 'flat'
-                        if all(z['type'] in ['Ч. дом'] for z in ads):
-                            type = 'house'
-                        marker['type'] = type
-                        replacement.append(json.dumps(marker))
-                        logger.debug("Adding marker: %s, title: %s, label %s, header: %s", a, a, str(len(ads)), header)
+                        replacement.append(json.dumps(build_marker(a, ads, marker)))
+                        logger.debug("Adding marker: %s, title: %s", a, a)
                 else:
                     logger.debug("No geodata for:    %s", a)
 
