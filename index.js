@@ -85,7 +85,7 @@
     }
 
     function updateContent(address, cnt) {
-        let urlWrapper = (content) => {return '<a target="_blank" href="{{url}}">'+content+'</a>'}
+        let urlWrapper = (content) => {return '<a target="_blank" href="https://www.ss.com/msg/{{url}}">'+content+'</a>'}
         let price = '<b>{{price}}</b>'
         let date = '<td style="text-align:right">{{date}}</td>';
         let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">';
@@ -113,13 +113,12 @@
     }
 
     let ranges = {
-        range1: { display: '<50k',     from: 0, to: 50000},
+        range1: { display: '< 50k',     from: 0, to: 50000},
         range2: { display: '50-100k',  from: 50001, to: 100000},
         range3: { display: '100-150k', from: 100001, to: 150000},
         range4: { display: '150-200k', from: 150001, to: 200000},
         range5: { display: '200-300k', from: 200001, to: 300000},
-        range6: { display: '300-500k', from: 300001, to: 500000},
-        range7: { display: '>500k',    from: 500001, to: Number.MAX_SAFE_INTEGER}
+        range6: { display: '> 300', from: 300001, to: Number.MAX_SAFE_INTEGER}
     };
     let rangesM2 = {
         m2range1: {display: '< 50',    from: 0, to: 50},
@@ -142,7 +141,7 @@
     let identifyRangeM2Key = (m2) => {
         for(idx in rangesM2Keys) {
             let rangeName = rangesM2Keys[idx];
-            if(rangesM2[rangeName].from < m2 && m2 <= rangesM2[rangeName].to) {
+            if(rangesM2[rangeName].from <= m2 && m2 <= rangesM2[rangeName].to) {
                 return rangeName;
             }
        }
@@ -159,7 +158,7 @@
 
     let flatsPerM2 = (range) => {
         let calculateItems = (total, el) => {
-            return total + el.cnt.filter(el=> {let n = parseInt(el.m2); let r = rangesM2[range]; return n > r.from && n <= r.to}).length;
+            return total + el.cnt.filter(el=> {let n = el.m2; let r = rangesM2[range]; return n > r.from && n <= r.to}).length;
         }
 
         return markers.reduce(calculateItems, 0);
@@ -277,17 +276,27 @@
         el.childNodes.forEach(child => processElement(el, child))
     }
 
+    let lastRead = false;
+
     function getJSON(path, callback) {
         let httpRequest = new XMLHttpRequest();
         httpRequest.onreadystatechange = function() {
+            var headers = httpRequest.getAllResponseHeaders();
+            var lastModified = httpRequest.getResponseHeader("last-modified");
+
             if (httpRequest.readyState === 4) {
                 if (httpRequest.status === 200) {
+                    lastRead = new Date(lastModified);
                     let data = JSON.parse(httpRequest.responseText);
                     if (callback) callback(data);
                 }
             }
         };
         httpRequest.open('GET', path);
+        if(lastRead){
+            httpRequest.setRequestHeader("If-Modified-Since", lastRead.toUTCString());
+        }
+
         httpRequest.send();
     }
 
@@ -339,7 +348,7 @@
                 rooms.add(el.rooms);
                 uniqueTypes.add(el.type);
                 el['range_price'] = identifyRangeKey(el.current_price);
-                el['range_m2'] = identifyRangeM2Key(parseInt(el.m2));
+                el['range_m2'] = identifyRangeM2Key(el.m2);
             });
         });
 
@@ -465,4 +474,4 @@
 
     setTimeout(loadData, 1)
 
-    setInterval(reLoadData, 60000)
+    setInterval(reLoadData, 10000)

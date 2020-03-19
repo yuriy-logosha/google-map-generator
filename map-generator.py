@@ -61,6 +61,7 @@ while True:
                     if ads:
                         for i in ads:
                             i['date'] = i['date'].strftime("%H:%M %d.%m.%Y")
+                            i['m2'] = int(i['m2'])
                             if 'rooms' not in i:
                                 i['rooms'] = '-'
                             prices = list(ss_ads.ads.find({'$and': [{'kind': 'old_price'}, {'ad_id': i['_id']}]}).sort('date', pymongo.DESCENDING))
@@ -82,7 +83,7 @@ while True:
                             if 'outdated' in i and i['outdated']:
                                 del i['url']
                             else:
-                                i['url'] = '/'.join([config['sscom.url'], 'msg', 'ru', i['url']])
+                                i['url'] = '/'.join(['ru', i['url']])
                         header = a.encode('ascii', 'xmlcharrefreplace').decode('cp1251')
                         if len(ads) > 1:
                             marker['label'] = str(len(ads))
