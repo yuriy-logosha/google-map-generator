@@ -86,7 +86,7 @@
 
     function updateContent(address, cnt) {
         let urlWrapper = (content) => {return '<a target="_blank" href="https://www.ss.com/msg/ru/real-estate/{{url}}">'+content+'</a>'}
-        let price = '<b>{{price}}</b>'
+        let price = '<b>{{price}}</b>';
         let date = '<td style="text-align:right">{{date}}</td>';
         let str1 = '<td style="text-align:right">{{type}}</td><td style="text-align:right">';
         let str1_1 = '</td><td style="text-align:right">{{m2}}m2</td><td style="text-align:right">{{lvl}}</td><td style="text-align:right">{{pm2}}/m2</td><td style="text-align:right">';
@@ -100,7 +100,7 @@
                 }
                 let img = lines?'<span title="'+lines+'"><img class="arrow" src="ico/arrow_'+(el.arrow===0?'up':'down')+'.png"/></span>':'';
                 let str2 = str1_1+price+img+'</td>'+date;
-                if (el.hasOwnProperty('url')) {
+                if (el.hasOwnProperty('url') && el.url) {
                     str2 = str1_1+urlWrapper(price)+img+'</td>'+date;
                 }
                 let template = str1 + (el.hasOwnProperty('rooms') && el['rooms']?'{{rooms}} &#1082;.':"") + str2;
