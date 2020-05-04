@@ -301,16 +301,38 @@
     }
 
     function initMap() {
+
         let new_home = localStorage.getItem('center');
         if (new_home) {
             home = JSON.parse(new_home);
         }
+//        if (navigator.geolocation) {
+//          navigator.geolocation.getCurrentPosition(function(position) {
+//            home = {
+//              lat: position.coords.latitude,
+//              lng: position.coords.longitude
+//            };
+//          }, function() {
+//            console.error("Error identifying location.");
+//          });
+//        } else {
+//            console.error("Browser doesn't support Geolocation.");
+//        }
+
+
         let new_zoom = localStorage.getItem('zoom');
 
         map = new google.maps.Map($('map'), {
             zoom: (new_zoom)?parseInt(new_zoom):15,
             center: home,
-            mapTypeId: 'hybrid'
+            mapTypeId: 'hybrid',
+            panControl: false,
+            zoomControl: true,
+            mapTypeControl: false,
+            scaleControl: true,
+            streetViewControl: true,
+            overviewMapControl: true,
+            rotateControl: true
         });
 
         map.controls[google.maps.ControlPosition.TOP_LEFT].push($('roomsControl'));
@@ -320,6 +342,7 @@
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('m2Control'));
         map.controls[google.maps.ControlPosition.LEFT_TOP].push($('pricesUpDown'));
         map.controls[google.maps.ControlPosition.BOTTOM_LEFT].push($('reloader'));
+        map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push($('my-location'));
 
         infowindow = new google.maps.InfoWindow({content: ""});
 
@@ -337,6 +360,28 @@
         map.addListener('tilesloaded', () => { let m = $('map'); removePopUp(m); processElement(null, m); });
         google.maps.event.addDomListener($('typesControl'), 'click', updateState);
 
+        google.maps.event.addDomListener($('my-location'), 'click', setMyLocation);
+
+
+        var myloc = new google.maps.Marker({
+            clickable: false,
+            icon: new google.maps.MarkerImage('//maps.gstatic.com/mapfiles/mobile/mobileimgs2.png',
+                                                            new google.maps.Size(22,22),
+                                                            new google.maps.Point(0,18),
+                                                            new google.maps.Point(11,11)),
+            shadow: null,
+            zIndex: 999,
+            map: map
+        });
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var me = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                myloc.setPosition(me);
+            }, function(error) {
+                console.error(error);
+            });
+        }
     }
 
     let processLocations = (data) => {
@@ -470,4 +515,17 @@
 
     function loadData() {
         getJSON('locations.json', (data) => {processLocations(data); initMap(); buildMarkers(); buildRanges(); buildRangesM2(); buildRooms(); updateState()})
+    }
+
+    function setMyLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                var me = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+                if (map && me) {
+                    map.setCenter(me);
+                }
+            }, function(error) {
+                console.error(error);
+            });
+        }
     }

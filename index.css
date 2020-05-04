@@ -74,3 +74,39 @@ html, body {
     transform: rotate(360deg);
   }
 }
+
+.widget-mylocation {
+    width: 40px;
+    height: 40px;
+    position: relative;
+    user-select: none;
+    outline: none;
+}
+
+.widget-mylocation-button {
+    background-color: rgba(255,255,255,1);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    display: block;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background-color 0.16s ease-out;
+}
+
+.widget-mylocation-button .widget-mylocation-cookie {
+    background-image: url(//maps.gstatic.com/tactile/mylocation/mylocation-sprite-1x.png);
+    background-size: 180px 18px;
+}
+
+.widget-mylocation-button-icon-common {
+    display: block;
+    height: 18px;
+    left: 11px;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 12px;
+    width: 18px;
+}
+
