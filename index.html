@@ -16,8 +16,12 @@
 
 <div id="reloader"><div>20</div><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>
 
-<script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCasbDiMWMftbKcSnFrez-SF-YCechHSLA">
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCasbDiMWMftbKcSnFrez-SF-YCechHSLA&callback=loadData"></script>
+
+<script>
+(function() {
+    setInterval(reLoadData, 10000)
+})();
 </script>
 </body>
 </html>

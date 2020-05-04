@@ -466,9 +466,8 @@
     let buildRanges = () => rangesKeys.forEach(el=> createCheckBox($('pricesControl'), el, `<div class="inline-50">${ranges[el].display}</div><div style="display:inline;">(${pricesPerRange(el)})</div>`, updateState))
     let buildRangesM2 = () => rangesM2Keys.forEach(el=> createCheckBox($('m2Control'), el, `<div class="inline-35">${rangesM2[el].display}</div><div style="display:inline">(${flatsPerM2(el)})</div>`, updateState))
     let buildRooms = () => Array.from(rooms).sort().forEach(el=> createCheckBox($('roomsControl'), buildFlatId(el), el, updateState))
-    let loadData = () => {getJSON('locations.json', (data) => {processLocations(data); initMap(); buildMarkers(); buildRanges(); buildRangesM2(); buildRooms(); updateState()})}
     let reLoadData = () => {getJSON('locations.json', (data) => {cleanMarkers(); processLocations(data); reBuildMarkers(); buildRanges(); buildRangesM2(); buildRooms(); updateState()})}
 
-    setTimeout(loadData, 1)
-
-    setInterval(reLoadData, 10000)
+    function loadData() {
+        getJSON('locations.json', (data) => {processLocations(data); initMap(); buildMarkers(); buildRanges(); buildRangesM2(); buildRooms(); updateState()})
+    }
