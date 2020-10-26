@@ -36,7 +36,10 @@ logger.setLevel(logging_level)
 
 
 def extract_price(s_price: str) -> int:
-    return int(s_price.replace('€', '').replace(',', '').strip()) if s_price else 0
+    if not s_price:
+        return 0
+    stripped = s_price.replace('€', '').replace(',', '').strip()
+    return int() if stripped else 0
 
 
 def build_cnt(date, m2, prices, arrow, pm2, lvl, url, c_p, rooms, price, type):
